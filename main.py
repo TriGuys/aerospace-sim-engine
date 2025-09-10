@@ -8,3 +8,6 @@ class Main():
         self.alertModule = AlertModule()
         self.faultDetection = FaultDetection()
         self.sensorIntegration = SensorIntegration()
+
+    def alert(self, message: str):
+        self.alertModule.alert(message)
