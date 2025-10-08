@@ -1,24 +1,23 @@
 import tkinter as tk
-
 from AlertModule import AlertModule
 from FaultDetection import FaultDetection
 from FaultDetection import Fault
 from SensorIntegration import SensorIntegration
-from UserInterface import UserInterface
-from Database import AlertDatabase
+
+class Main:
+    def __init__(self):
+        self.alertModule = AlertModule()
+        self.faultDetection = FaultDetection()
+        self.sensorIntegration = SensorIntegration()
 
 def main():
     root = tk.Tk()
 
-    UI = UserInterface(root)  
+    UI = Main()
+    UI.alertModule 
 
-    database = AlertDatabase()
-    alert_module = AlertModule(database)
-    fault_detection = FaultDetection()
-    sensor_integration = SensorIntegration()
-
-    UI.draw_window()
     root.mainloop()
+
 
 if __name__ == "__main__":
     main()
