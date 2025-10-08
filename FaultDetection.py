@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import pandas as pd
 import json
 import logging
@@ -5,6 +6,18 @@ from pathlib import Path
 from Abstractions import Fault, Severity, Status
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+=======
+import datetime
+from enum import Enum
+
+class Fault():
+    def __init__(self, faultID: str, severity: Enum, description: str, timestamp: datetime.datetime, status: Enum):
+        self.faultID = faultID
+        self.severity = severity
+        self.description = description
+        self.timestamp = timestamp
+        self.status = status
+>>>>>>> 0aa9189 (correct type hints for fault class and getActiveFaults function)
 
 class FaultDetection():
     def __init__(self):
@@ -96,6 +109,14 @@ class FaultDetection():
             )
             return False
 
+<<<<<<< HEAD
     # Returns a list of faults that are active and should be passed to the AlertModule.
+=======
+    # takes a fault and isolates it
+    def isolateFault(self, fault: Fault) -> Fault:
+        return fault
+
+    # Returns a list of currently active faults
+>>>>>>> 0aa9189 (correct type hints for fault class and getActiveFaults function)
     def getActiveFaults(self) -> list:
         return self.activeFaults
