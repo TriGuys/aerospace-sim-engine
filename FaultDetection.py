@@ -9,5 +9,25 @@ class Fault():
         self.status = status
 
 class FaultDetection():
+
     def __init__(self):
-        pass
+        self.activeFaults = []
+        self.detectionRules = []
+
+    # Takes sensor data, applies detection rules and returns list of detected faults
+    def detectFaults(self, sensorData: dict) -> list:
+        detected_faults = []
+        for rule in self.detectionRules:
+            fault = rule(sensorData)
+            if fault:
+                detected_faults.append(fault)
+                self.activeFaults.append(fault) 
+        return detected_faults
+
+    # takes a fault and isolates it
+    def isolateFault(self, fault: Fault) -> Fault:
+        return fault
+
+    # Returns a list of currently active faults
+    def getActiveFaults(self):
+        return self.activeFaults
