@@ -10,8 +10,17 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 import datetime
 from enum import Enum
 
+class Severity(Enum):
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3
+
+class Status(Enum):
+    ACTIVE = 1
+    RESOLVED = 2
+
 class Fault():
-    def __init__(self, faultID: str, severity: Enum, description: str, timestamp: datetime.datetime, status: Enum):
+    def __init__(self, faultID: str, severity: Severity, description: str, timestamp: datetime.datetime, status: Status):
         self.faultID = faultID
         self.severity = severity
         self.description = description
