@@ -1,7 +1,8 @@
 import datetime
+from enum import Enum
 
 class Fault():
-    def __init__(self, faultID: str, severity: enumerate, description: str, timestamp: datetime, status: enumerate):
+    def __init__(self, faultID: str, severity: Enum, description: str, timestamp: datetime.datetime, status: Enum):
         self.faultID = faultID
         self.severity = severity
         self.description = description
@@ -29,5 +30,5 @@ class FaultDetection():
         return fault
 
     # Returns a list of currently active faults
-    def getActiveFaults(self):
+    def getActiveFaults(self) -> list:
         return self.activeFaults
