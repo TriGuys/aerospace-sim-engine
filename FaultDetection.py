@@ -1,8 +1,7 @@
-
-class FaultDetection():
-
+class Fault():
     def __init__(self):
         pass
 
-    def fault(self):
+class FaultDetection():
+    def __init__(self):
         pass
