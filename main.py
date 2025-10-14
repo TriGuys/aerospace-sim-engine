@@ -1,21 +1,13 @@
-import tkinter as tk
-
 from AlertModule import AlertModule
 from FaultDetection import FaultDetection
 from SensorIntegration import SensorIntegration
-from UserInterface import UserInterface
 
-def main():
-    root = tk.Tk()
+class Main():
 
-    UI = UserInterface(root)  
+    def __init__(self):
+        self.alertModule = AlertModule()
+        self.faultDetection = FaultDetection()
+        self.sensorIntegration = SensorIntegration()
 
-    alert_module = AlertModule()
-    fault_detection = FaultDetection()
-    sensor_integration = SensorIntegration()
-
-    UI.DrawWindow()
-    root.mainloop()
-
-if __name__ == "__main__":
-    main()
+    def alert(self, message: str):
+        self.alertModule.alert(message)
