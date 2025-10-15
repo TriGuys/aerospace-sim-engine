@@ -1,10 +1,12 @@
+import re
 import sqlite3
 from pathlib import Path
+from typing import Optional
 from Abstractions import Alert, AlertCreation
 
-con = sqlite3.connect("alerts.db", detect_types=sqlite3.PARSE_DECLTYPES) # detect types is for datetime within the db
+hour_minute_second = re.compile(r"^\d{2}:\d{2}:\d{2}$")
 
-class db:
+class AlertDatabase:
 
     def __init__(self, db_path: str = "alerts.db") -> None:
         self.db_path = db_path
@@ -31,51 +33,54 @@ class db:
                 """
             )
 
-    def create(self, alert: AlertCreation) -> int:
-        with self._connect() as con:
-            cur = con.execute(
-                "INSERT INTO alerts(sensord_id,fault_code,severity,message,timestamp) VALUES (?,?,?,?,?)",
-                (alert.sensor_id,
-                 alert.fault_code,
-                 alert.severity,
-                 alert.message,
-                 alert.timestamp)
-            )
-            con.commit()
-            return cur.lastrowid
+    @staticmethod # doesn't require the class, just simply a utility function.
+    def _validate_timestamp(ts: str) -> None:
+        if not hour_minute_second.match(ts):
+            raise ValueError("timestamp must be HH:MM:SS")
 
-    def get(self, alert_id: int):
+    def create(self, alert: AlertCreation) -> int:
+        self._validate_timestamp(alert.timestamp)
+        try:
+            with self._connect() as con:
+                cur = con.execute(
+                    "INSERT INTO alerts(sensor_id,fault_code,severity,message,timestamp) VALUES (?,?,?,?,?)",
+                    (alert.sensor_id,
+                    alert.fault_code,
+                    alert.severity,
+                    alert.message,
+                    alert.timestamp)
+                )
+                return cur.lastrowid
+        except sqlite3.IntegrityError as e:
+            raise ValueError(f"Invalid alert data: {e}")
+
+    def get(self, alert_id: int) -> Optional[Alert]:
         with self._connect() as con:
-            con.row_factory = sqlite3.Row
             row = con.execute(
                 "SELECT alert_id, sensor_id, fault_code, severity, message, timestamp FROM alerts WHERE alert_id = ?", (alert_id,)
             ).fetchone()
-            return Alert(**row) if row else None
+        if row is None:
+            return None
+        return Alert(**dict(row))
     
     def get_all(self):
         with self._connect() as con:
-            con.row_factory = sqlite3.Row
-            cur = con.execute("""
+            rows = con.execute(
+                """
                 SELECT alert_id, sensor_id, fault_code, severity, message, timestamp
                 FROM alerts
                 ORDER BY alert_id DESC
-            """)
-            return [
-                Alert(
-                    alert_id=r["alert_id"],
-                    sensor_id=r["sensor_id"],
-                    fault_code=r["fault_code"],
-                    severity=r["severity"],
-                    message=r["message"],
-                    timestamp=r["timestamp"],
+                """
+            ).fetchall()
+        return [Alert(**dict(r)) for r in rows]
+
+    def delete(self, alert_id: int) -> bool:
+        try:
+            with self._connect() as con:
+                cur = con.execute(
+                    "DELETE FROM alerts WHERE alert_id = ?",
+                    (alert_id,)
                 )
-                for r in cur.fetchall()
-            ]
-        
-    def delete(self, alert_id: int):
-        with self._connect() as con:
-            cur = con.execute(
-                "DELETE FROM alerts WHERE alert_id = ?",
-                (alert_id,)
-            )
-            return cur.rowcount
+                return cur.rowcount > 0
+        except sqlite3.OperationalError as e:
+            raise RuntimeError(f"Delete failed: {e}")
