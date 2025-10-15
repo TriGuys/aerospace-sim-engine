@@ -1,5 +1,6 @@
 import sqlite3, datetime
 from pathlib import Path
+from Abstractions import Alert
 
 con = sqlite3.connect("alerts.db", detect_types=sqlite3.PARSE_DECLTYPES) # detect types is for datetime within the db
 
@@ -38,3 +39,11 @@ class db:
             )
             con.commit()
             return cur.lastrowid
+
+    def get(self, alertId):
+        with self._connect() as con:
+            row = con.execute(
+                "SELECT alertId, sensorId, faultCode, severity, message, timestamp FROM alerts WHERE alertId = ?", (alertId)
+            ).fetchone()
+            if not row: return None
+            return Alert(row)
