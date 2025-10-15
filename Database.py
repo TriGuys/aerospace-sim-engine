@@ -1,6 +1,6 @@
 import sqlite3, datetime
 from pathlib import Path
-from Abstractions import Alert
+from Abstractions import Alert, AlertCreation
 
 con = sqlite3.connect("alerts.db", detect_types=sqlite3.PARSE_DECLTYPES) # detect types is for datetime within the db
 
@@ -21,9 +21,9 @@ class db:
             con.execute(
                 """
                 CREATE TABLE IF NOT EXISTS alerts (
-                  alertId         INTEGER PRIMARY KEY AUTOINCREMENT,
-                  sensorId        TEXT    NOT NULL,
-                  faultCode       TEXT    NOT NULL,
+                  alert_id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                  sensor_id       TEXT    NOT NULL,
+                  fault_code      TEXT    NOT NULL,
                   severity        TEXT    NOT NULL,
                   message         TEXT    NOT NULL,
                   timestamp       TEXT    NOT NULL CHECK (timestamp GLOB '??:??:??')
@@ -31,11 +31,15 @@ class db:
                 """
             )
 
-    def create(self, sensorId: str, faultCode: str, severity: str, message: str, timestamp: str) -> int:
+    def create(self, alert: AlertCreation) -> int:
         with self._connect() as con:
             cur = con.execute(
-                "INSERT INTO alerts(sensordId,faultCode,severity,message,timestamp) VALUES (?,?,?,?,?)",
-                (sensorId,faultCode,severity,message,timestamp)
+                "INSERT INTO alerts(sensord_id,fault_code,severity,message,timestamp) VALUES (?,?,?,?,?)",
+                (alert.sensor_id,
+                 alert.fault_code,
+                 alert.severity,
+                 alert.message,
+                 alert.timestamp)
             )
             con.commit()
             return cur.lastrowid
