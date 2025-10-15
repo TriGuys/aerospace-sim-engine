@@ -3,7 +3,6 @@ from pathlib import Path
 
 con = sqlite3.connect("alerts.db", detect_types=sqlite3.PARSE_DECLTYPES) # detect types is for datetime within the db
 
-
 class db:
 
     def __init__(self, db_path: str = "alerts.db") -> None:
@@ -21,11 +20,21 @@ class db:
             con.execute(
                 """
                 CREATE TABLE IF NOT EXISTS alerts (
-                  id              INTEGER PRIMARY KEY AUTOINCREMENT,
-                  source          TEXT    NOT NULL,
+                  alertId         INTEGER PRIMARY KEY AUTOINCREMENT,
+                  sensorId        TEXT    NOT NULL,
+                  faultCode       TEXT    NOT NULL,
                   severity        TEXT    NOT NULL,
                   message         TEXT    NOT NULL,
-                  created_at      TEXT    NOT NULL DEFAULT (STRFTIME('%Y-%m-%dT%H:%M','now'))
+                  timestamp       TEXT    NOT NULL CHECK (timestamp GLOB '??:??:??')
                 )
                 """
             )
+
+    def create(self, sensorId: str, faultCode: str, severity: str, message: str, timestamp: str) -> int:
+        with self._connect() as con:
+            cur = con.execute(
+                "INSERT INTO alerts(sensordId,faultCode,severity,message,timestamp) VALUES (?,?,?,?,?)",
+                (sensorId,faultCode,severity,message,timestamp)
+            )
+            con.commit()
+            return cur.lastrowid
