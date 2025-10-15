@@ -1,5 +1,3 @@
-import tkinter as tk
-
 from AlertModule import AlertModule
 from FaultDetection import FaultDetection
 from FaultDetection import Fault
@@ -20,3 +18,13 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+class Main():
+
+    def __init__(self):
+        self.alertModule = AlertModule()
+        self.faultDetection = FaultDetection()
+        self.sensorIntegration = SensorIntegration()
+
+    def alert(self, message: str):
+        self.alertModule.alert(message)
