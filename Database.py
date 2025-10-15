@@ -47,7 +47,27 @@ class db:
     def get(self, alertId):
         with self._connect() as con:
             row = con.execute(
-                "SELECT alertId, sensorId, faultCode, severity, message, timestamp FROM alerts WHERE alertId = ?", (alertId)
+                "SELECT alert_id, sensor_id, fault_code, severity, message, timestamp FROM alerts WHERE alert_id = ?", (alertId)
             ).fetchone()
             if not row: return None
             return Alert(row)
+    
+    def get_all(self):
+        with self._connect() as con:
+            con.row_factory = sqlite3.Row
+            cur = con.execute("""
+                SELECT alert_id, sensor_id, fault_code, severity, message, timestamp
+                FROM alerts
+                ORDER BY alert_id DESC
+            """)
+            return [
+                Alert(
+                    alert_id=r["alert_id"],
+                    sensor_id=r["sensor_id"],
+                    fault_code=r["fault_code"],
+                    severity=r["severity"],
+                    message=r["message"],
+                    timestamp=r["timestamp"],
+                )
+                for r in cur.fetchall()
+            ]
