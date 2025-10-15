@@ -44,13 +44,13 @@ class db:
             con.commit()
             return cur.lastrowid
 
-    def get(self, alertId):
+    def get(self, alert_id: int):
         with self._connect() as con:
+            con.row_factory = sqlite3.Row
             row = con.execute(
-                "SELECT alert_id, sensor_id, fault_code, severity, message, timestamp FROM alerts WHERE alert_id = ?", (alertId)
+                "SELECT alert_id, sensor_id, fault_code, severity, message, timestamp FROM alerts WHERE alert_id = ?", (alert_id,)
             ).fetchone()
-            if not row: return None
-            return Alert(row)
+            return Alert(**row) if row else None
     
     def get_all(self):
         with self._connect() as con:
@@ -71,3 +71,11 @@ class db:
                 )
                 for r in cur.fetchall()
             ]
+        
+    def delete(self, alert_id: int):
+        with self._connect() as con:
+            cur = con.execute(
+                "DELETE FROM alerts WHERE alert_id = ?",
+                (alert_id,)
+            )
+            return cur.rowcount
