@@ -1,4 +1,4 @@
-import sqlite3, datetime
+import sqlite3
 from pathlib import Path
 from Abstractions import Alert, AlertCreation
 
