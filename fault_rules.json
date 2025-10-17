@@ -9,7 +9,7 @@
     "message": "Engine oil temperature exceeds safe limit"
   },
   {
-    "sensorId": "ENG_OILPRES",
+    "sensorId": "ENG_OILPRESS",
     "parameter": "Pressure",
     "condition": "<",
     "threshold": 1000,
@@ -25,5 +25,41 @@
     "faultCode": "CABIN_PRESSURE_FAULT",
     "severity": "CRITICAL",
     "message": "Cabin pressure altitude exceeds limit"
+  },
+  {
+    "sensorId": "HYDRAULIC_PRESS",
+    "parameter": "Pressure",
+    "condition": "<",
+    "threshold": 0,
+    "faultCode": "HYDRAULIC_FAILURE",
+    "severity": "CRITICAL",
+    "message": "Hydraulic system pressure loss detected"    
+  },
+  {
+    "sensorId": "FUEL_FLOW",
+    "parameter": "Flow Rate",
+    "condition": "<",
+    "threshold": 100,
+    "faultCode": "LOW_FUEL_FLOW",
+    "severity": "LOW",
+    "message": "Fuel flow rate below expected level"    
+  },
+  {
+    "sensorId": "FUEL_QUANT",
+    "parameter": "Quantity",
+    "condition": "<",
+    "threshold": 500,
+    "faultCode": "LOW_FUEL_QUANTITY",
+    "severity": "HIGH",
+    "message": "Fuel quantity below reserve threshold"    
+  },
+  {
+    "sensorId": "ELEC_BUS",
+    "parameter": "Voltage",
+    "condition": "<",
+    "threshold": 20,
+    "faultCode": "VOLTAGE_LOW",
+    "severity": "MEDIUM",
+    "message": "Electrical bus voltage too low"    
   }
 ]
