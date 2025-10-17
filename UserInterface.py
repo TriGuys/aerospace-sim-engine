@@ -7,6 +7,8 @@ class UserInterface():
         self.root.title("HeMoSys - Aircraft Health Monitoring System")
         self.root.geometry("1000x600")
         self.root.configure(bg="white")
+        self.root.grid_rowconfigure(0, weight=3)
+        self.root.grid_rowconfigure(1, weight=1)
 
         # Configures the grid layout of two columns for button sidebar and main content)
         self.root.grid_columnconfigure(0, weight=1, minsize=180)
@@ -56,12 +58,25 @@ class UserInterface():
         for row in data:
             self.table.insert("", tk.END, values=row)
 
-        scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.table.yview)
+        scrollbar = ttk.Scrollbar(frame, orient="vertical", command=self.table.yview)
         self.table.configure(yscroll=scrollbar.set)
 
         self.table.grid(row=0, column=0, sticky="nsew")
         scrollbar.grid(row=0, column=1, sticky="ns")
 
+    def CreateAlertGraph(self, parent):
+        frame = tk.Frame(parent, bg="#e9e9e9", height=200, bd=1, relief="solid")
+        frame.grid(row=1, column=1, sticky="nsew", padx=10, pady=(0, 10))
+        frame.grid_propagate(False)  # ensures minimum height is respected
+
+        tk.Label(
+            frame,
+            text="(Graph placeholder for alerts over time)",
+            bg="#e9e9e9",
+            font=("Arial", 10, "italic")
+        ).pack(pady=40)
+
     def DrawWindow(self):
         self.CreateSidebar(self.root)
         self.CreateAlertTable(self.root)
+        self.CreateAlertGraph(self.root)
