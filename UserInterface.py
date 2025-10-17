@@ -4,14 +4,16 @@ from tkinter import ttk
 class UserInterface():
     def __init__(self, root: tk.Tk) -> None:
         self.root = root
-        self.root.title("Aircraft Health Monitoring")
-        self.root.geometry("800x400")
+        self.root.title("HeMoSys - Aircraft Health Monitoring System")
+        self.root.geometry("1000x600")
+        self.root.configure(bg="white")
 
     def CreateAlert(self):
         pass
 
-    def CreateTable(self):
-        columns = ("Name", "Age", "Country")
+    # Creates the main alert table
+    def CreateAlertTable(self):
+        columns = ("ID", "Sensor", "Severity", "Time", "Status", "Actions")
         table = ttk.Treeview(self.root, columns=columns, show="headings")
 
         for col in columns:
@@ -19,9 +21,9 @@ class UserInterface():
             table.column(col, width=120, anchor=tk.CENTER)
 
         data = [
-            ("Alice", 25, "UK"),
-            ("Bob", 30, "USA"),
-            ("Charlie", 22, "Canada"),
+            ("01", "001", "Severe", "01:00", "Active", "i  X"),
+            ("02", "003", "Moderate", "10:00", "Active", "i  X"),
+            ("03", "004", "Advisory", "16:00", "Active", "i  X")
         ]
 
         for row in data:
@@ -34,4 +36,4 @@ class UserInterface():
         scrollbar.pack(side="right", fill="y")
 
     def DrawWindow(self):
-        self.CreateTable()
+        self.CreateAlertTable()
