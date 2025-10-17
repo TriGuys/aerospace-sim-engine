@@ -34,7 +34,7 @@ class FaultDetection():
                 self.activeFaults.append(fault) 
         return detected_faults
 
-    # takes a fault and isolates it
+    # Takes a fault and isolates it
     def isolateFault(self, fault: Fault) -> Fault:
         return fault
 
