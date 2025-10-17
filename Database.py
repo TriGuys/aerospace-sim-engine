@@ -4,8 +4,6 @@ from pathlib import Path
 from typing import Optional
 from Abstractions import Alert, AlertCreation
 
-hour_minute_second = re.compile(r"^\d{2}:\d{2}:\d{2}$")
-
 class AlertDatabase:
 
     def __init__(self, db_path: str = "alerts.db") -> None:
@@ -35,6 +33,7 @@ class AlertDatabase:
 
     @staticmethod # doesn't require the class, just simply a utility function.
     def _validate_timestamp(ts: str) -> None:
+        hour_minute_second = re.compile(r"^\d{2}:\d{2}:\d{2}$")
         if not hour_minute_second.match(ts):
             raise ValueError("timestamp must be HH:MM:SS")
 
