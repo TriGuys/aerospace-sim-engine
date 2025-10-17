@@ -8,17 +8,44 @@ class UserInterface():
         self.root.geometry("1000x600")
         self.root.configure(bg="white")
 
+        # Configures the grid layout of two columns for button sidebar and main content)
+        self.root.grid_columnconfigure(0, weight=1, minsize=180)
+        self.root.grid_columnconfigure(1, weight=4)
+        self.root.grid_rowconfigure(0, weight=1)
+
+    # Creates the left sidebar with alert filter buttons
+    def CreateSidebar(self, parent):
+        sidebar = tk.Frame(parent, bg="#f2f2f2", bd=1, relief="solid")
+        sidebar.grid(row=0, column=0, sticky="nswe")
+
+        tk.Label(
+            sidebar, text="Alerts", bg="#f2f2f2",
+            font=("Arial", 12, "bold")
+        ).pack(pady=(15, 10))
+
+        buttons = ["All Alerts", "Severe Alerts", "Moderate Alerts", "Advisory Alerts"]
+        for text in buttons:
+            b = tk.Button(sidebar, text=text, width=20, font=("Arial", 10))
+            b.pack(pady=5)
+
+        return sidebar
+
     def CreateAlert(self):
         pass
 
     # Creates the main alert table
-    def CreateAlertTable(self):
+    def CreateAlertTable(self, parent):
+        frame = tk.Frame(parent, bg="white")
+        frame.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
+        frame.grid_rowconfigure(0, weight=1)
+        frame.grid_columnconfigure(0, weight=1)
+
         columns = ("ID", "Sensor", "Severity", "Time", "Status", "Actions")
-        table = ttk.Treeview(self.root, columns=columns, show="headings")
+        self.table = ttk.Treeview(frame, columns=columns, show="headings", height=10)
 
         for col in columns:
-            table.heading(col, text=col)
-            table.column(col, width=120, anchor=tk.CENTER)
+            self.table.heading(col, text=col)
+            self.table.column(col, width=120, anchor=tk.CENTER)
 
         data = [
             ("01", "001", "Severe", "01:00", "Active", "i  X"),
@@ -27,13 +54,14 @@ class UserInterface():
         ]
 
         for row in data:
-            table.insert("", tk.END, values=row)
+            self.table.insert("", tk.END, values=row)
 
-        scrollbar = ttk.Scrollbar(self.root, orient="vertical", command=table.yview)
-        table.configure(yscroll=scrollbar.set)
+        scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.table.yview)
+        self.table.configure(yscroll=scrollbar.set)
 
-        table.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        self.table.grid(row=0, column=0, sticky="nsew")
+        scrollbar.grid(row=0, column=1, sticky="ns")
 
     def DrawWindow(self):
-        self.CreateAlertTable()
+        self.CreateSidebar(self.root)
+        self.CreateAlertTable(self.root)
