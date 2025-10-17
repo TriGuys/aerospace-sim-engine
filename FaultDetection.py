@@ -23,7 +23,6 @@ class Fault():
         self.sensor_id = sensor_id
 
 class FaultDetection():
-
     def __init__(self):
         self.activeFaults = []
         self.detectionRules = []
@@ -54,6 +53,14 @@ class FaultDetection():
                     detected_faults.append(fault)
                     self.activeFaults.append(fault)
         return detected_faults
+    
+    # Applies fault detection rules to each row in a pandas DataFrame
+    def detectFromBatch(self, dataFrame):
+        all_faults = []
+        for _, row in dataFrame.iterrows():
+            row_faults = self.detectFaults(row.to_dict())
+            all_faults.extend(row_faults)
+        return all_faults
     
     # Returns True if rule condition is met
     def _evaluate_rule(self, condition: str, value: float, threshold: float) -> bool:
