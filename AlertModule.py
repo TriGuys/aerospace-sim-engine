@@ -1,23 +1,20 @@
-
+from Abstractions import AlertCreation, Alert
+from Database import AlertDatabase
 
 class AlertModule():
 
-    def __init__(self):
-        pass
+    def __init__(self, database: AlertDatabase):
+        self.database = database
 
-    def create_alert(self, sensor_id, fault_code, severity, message, timestamp):
-        """
-        intialise alert creation dataclass
+    def create_alert(self, sensor_id: str, fault_code: str, severity: str, message: str, timestamp: str):
         create_alert = AlertCreation(
-            sensor_id = sensor_id
-            fault_code = fault_code
-            severity = severity
-            message = message
+            sensor_id = sensor_id,
+            fault_code = fault_code,
+            severity = severity,
+            message = message,
             timestamp = timestamp
         )
 
-        display alert on user interface table
+        alert: Alert = self.database.create(create_alert)
 
-        """
-
-        pass
+        

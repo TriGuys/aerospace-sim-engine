@@ -1,13 +1,18 @@
 from AlertModule import AlertModule
 from FaultDetection import FaultDetection
 from SensorIntegration import SensorIntegration
+from Database import AlertDatabase
 
-class Main():
+def main():
+    done = False
 
-    def __init__(self):
-        self.alertModule = AlertModule()
-        self.faultDetection = FaultDetection()
-        self.sensorIntegration = SensorIntegration()
+    database = AlertDatabase()
+    alert_module = AlertModule(database)
+    fault_detection = FaultDetection()
+    sensor_integration = SensorIntegration()
 
-    def alert(self, message: str):
-        self.alertModule.alert(message)
+    while not done:
+        pass
+
+if __name__ == "__main__":
+    main()

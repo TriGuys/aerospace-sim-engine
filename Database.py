@@ -38,19 +38,25 @@ class AlertDatabase:
         if not hour_minute_second.match(ts):
             raise ValueError("timestamp must be HH:MM:SS")
 
-    def create(self, alert: AlertCreation) -> int:
+    def create(self, alert: AlertCreation) -> Alert:
         self._validate_timestamp(alert.timestamp)
         try:
             with self._connect() as con:
-                cur = con.execute(
-                    "INSERT INTO alerts(sensor_id,fault_code,severity,message,timestamp) VALUES (?,?,?,?,?)",
-                    (alert.sensor_id,
+                row = con.execute(
+                    """
+                    INSERT INTO alerts(sensor_id,fault_code,severity,message,timestamp) 
+                    VALUES (?,?,?,?,?)
+                    RETURNING alert_id, sensor_id, fault_code, severity, message, timestamp
+                    """,
+                    (
+                    alert.sensor_id,
                     alert.fault_code,
                     alert.severity,
                     alert.message,
-                    alert.timestamp)
-                )
-                return cur.lastrowid
+                    alert.timestamp
+                    ),
+                ).fetchone()
+                return Alert(**dict(row))
         except sqlite3.IntegrityError as e:
             raise ValueError(f"Invalid alert data: {e}")
 
