@@ -8,30 +8,42 @@ from Abstractions import Fault, Severity, Status
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 =======
 import datetime
+import json
 from enum import Enum
+from pathlib import Path
 
 class Severity(Enum):
     LOW = 1
     MEDIUM = 2
     HIGH = 3
+    CRITICAL = 4
 
 class Status(Enum):
     ACTIVE = 1
     RESOLVED = 2
 
 class Fault():
-    def __init__(self, faultID: str, severity: Severity, description: str, timestamp: datetime.datetime, status: Status):
+    def __init__(self, faultID: str, severity: Severity, description: str, timestamp: datetime.datetime, status: Status, sensor_id=None):
         self.faultID = faultID
         self.severity = severity
         self.description = description
         self.timestamp = timestamp
         self.status = status
+        self.sensor_id = sensor_id
 >>>>>>> 0aa9189 (correct type hints for fault class and getActiveFaults function)
 
 class FaultDetection():
     def __init__(self):
         self.activeFaults = []
         self.detectionRules = []
+    
+    # Loads fault detection rules from a JSON file    
+    def loadRules(self, file_path: str):
+        with open(Path(file_path), "r") as f:
+            rules = json.load(f)
+        for rule in rules:
+            rule["severity"] = Severity[rule["severity"]]
+        self.detectionRules = rules
     
     # Loads fault detection rules from a JSON file    
     def loadRules(self, file_path: str):
