@@ -11,6 +11,15 @@ class Status(Enum):
     ACTIVE = 1
     RESOLVED = 2
 
+@dataclass
+class Fault:
+    fault_id: str
+    sensor_id: str
+    severity: Severity
+    description: str
+    timestamp: str
+    status: Status
+
 @dataclass(frozen=True)
 class AlertCreation:
     sensor_id: str
