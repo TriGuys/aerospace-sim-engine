@@ -9,6 +9,7 @@ class UserInterface():
         self.root.configure(bg="white")
         self.root.grid_rowconfigure(0, weight=3)
         self.root.grid_rowconfigure(1, weight=1)
+        self.root.state('zoomed')
 
         # Configures the grid layout of two columns for button sidebar and main content)
         self.root.grid_columnconfigure(0, weight=1, minsize=180)
@@ -25,7 +26,7 @@ class UserInterface():
             font=("Arial", 12, "bold")
         ).pack(pady=(15, 10))
 
-        buttons = ["All Alerts", "Severe Alerts", "Moderate Alerts", "Advisory Alerts"]
+        buttons = ["All Alerts", "Critical Alerts", "Moderate Alerts", "Advisory Alerts"]
         for text in buttons:
             b = tk.Button(sidebar, text=text, width=20, font=("Arial", 10))
             b.pack(pady=5)
@@ -42,7 +43,10 @@ class UserInterface():
         frame.grid_rowconfigure(0, weight=1)
         frame.grid_columnconfigure(0, weight=1)
 
-        columns = ("ID", "Sensor", "Severity", "Time", "Status", "Actions")
+        style = ttk.Style()
+        style.configure("Treeview", rowheight=30)
+
+        columns = ("Sensor ID", "Fault Code", "Severity", "Message", "Timestamp", "Status", "Actions")
         self.table = ttk.Treeview(frame, columns=columns, show="headings", height=10)
 
         for col in columns:
@@ -50,9 +54,9 @@ class UserInterface():
             self.table.column(col, width=120, anchor=tk.CENTER)
 
         data = [
-            ("01", "001", "Severe", "01:00", "Active", "i  X"),
-            ("02", "003", "Moderate", "10:00", "Active", "i  X"),
-            ("03", "004", "Advisory", "16:00", "Active", "i  X")
+            ("01", "ENGTEMP", "Critical", "Engine temperature exceeded", "13:48:01", "Active", "i  X"),
+            ("02", "ENGPRESS", "Moderate", "Engine pressure too low", "13:52:04", "Active", "i  X"),
+            ("03", "CABIN_PRESS", "Critical", "Cabin pressure lost", "14:01:01", "Active", "i  X")
         ]
 
         for row in data:
@@ -64,10 +68,11 @@ class UserInterface():
         self.table.grid(row=0, column=0, sticky="nsew")
         scrollbar.grid(row=0, column=1, sticky="ns")
 
+    # Creates the alert graph window
     def CreateAlertGraph(self, parent):
         frame = tk.Frame(parent, bg="#e9e9e9", height=200, bd=1, relief="solid")
         frame.grid(row=1, column=1, sticky="nsew", padx=10, pady=(0, 10))
-        frame.grid_propagate(False)  # ensures minimum height is respected
+        frame.grid_propagate(False)
 
         tk.Label(
             frame,
