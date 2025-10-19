@@ -1,4 +1,15 @@
+from enum import Enum
 from dataclasses import dataclass
+
+class Severity(Enum):
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3
+    CRITICAL = 4
+
+class Status(Enum):
+    ACTIVE = 1
+    RESOLVED = 2
 
 @dataclass(frozen=True)
 class AlertCreation:
