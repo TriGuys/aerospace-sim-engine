@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 =======
 import datetime
 import json
-from enum import Enum
+import logging
 from pathlib import Path
 
 class Severity(Enum):
@@ -42,7 +42,7 @@ class FaultDetection():
         with open(Path(file_path), "r") as f:
             rules = json.load(f)
         for rule in rules:
-            rule["severity"] = Severity[rule["severity"]]
+            rule["severity"] = Severity[rule["severity"].upper()]
         self.detectionRules = rules
     
     # Loads fault detection rules from a JSON file    
@@ -80,6 +80,13 @@ class FaultDetection():
                 none of the fault rules were triggered.
         """
 
+        """
+        Applies fault detection rules to a single sensor data record (as a dictionary).
+
+        Note:
+            This method is called internally by detectFromBatch(), 
+            which applies detection to an entire pandas DataFrame.
+        """
         detected_faults = []
         for rule in self.detectionRules:
              if rule["sensor_id"] == sensorData.get("sensor_id"):

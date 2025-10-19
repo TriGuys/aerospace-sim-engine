@@ -4,20 +4,11 @@ from FaultDetection import FaultDetection
 from FaultDetection import Fault
 from SensorIntegration import SensorIntegration
 
-class Main:
-    def __init__(self):
-        self.alertModule = AlertModule()
-        self.faultDetection = FaultDetection()
-        self.sensorIntegration = SensorIntegration()
-
 def main():
-    root = tk.Tk()
-
-    UI = Main()
-    UI.alertModule 
-
-    root.mainloop()
-
+    alert_module = AlertModule()
+    fault_detection = FaultDetection()
+    sensor_integration = SensorIntegration()
+    fault = Fault()
 
 if __name__ == "__main__":
     main()
