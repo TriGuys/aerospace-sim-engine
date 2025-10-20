@@ -1,65 +1,65 @@
 [
   {
-    "sensorId": "ENG_OILTEMP",
+    "sensor_id": "ENG_OILTEMP",
     "parameter": "Temperature",
     "condition": ">",
     "threshold": 220,
     "faultCode": "ENGINE_OVERHEAT",
-    "severity": "HIGH",
+    "severity": "Critical",
     "message": "Engine oil temperature exceeds safe limit"
   },
   {
-    "sensorId": "ENG_OILPRESS",
+    "sensor_id": "ENG_OILPRESS",
     "parameter": "Pressure",
     "condition": "<",
     "threshold": 1000,
     "faultCode": "LOW_OIL_PRESSURE",
-    "severity": "MEDIUM",
+    "severity": "Moderate",
     "message": "Oil pressure below minimum operating level"
   },
   {
-    "sensorId": "CABIN_PRESS",
+    "sensor_id": "CABIN_PRESS",
     "parameter": "Pressure",
     "condition": ">",
     "threshold": 9000,
     "faultCode": "CABIN_PRESSURE_FAULT",
-    "severity": "CRITICAL",
+    "severity": "Critical",
     "message": "Cabin pressure altitude exceeds limit"
   },
   {
-    "sensorId": "HYDRAULIC_PRESS",
+    "sensor_id": "HYDRAULIC_PRESS",
     "parameter": "Pressure",
     "condition": "<",
     "threshold": 0,
     "faultCode": "HYDRAULIC_FAILURE",
-    "severity": "CRITICAL",
+    "severity": "Critical",
     "message": "Hydraulic system pressure loss detected"    
   },
   {
-    "sensorId": "FUEL_FLOW",
+    "sensor_id": "FUEL_FLOW",
     "parameter": "Flow Rate",
     "condition": "<",
     "threshold": 100,
     "faultCode": "LOW_FUEL_FLOW",
-    "severity": "LOW",
+    "severity": "Advisory",
     "message": "Fuel flow rate below expected level"    
   },
   {
-    "sensorId": "FUEL_QUANT",
+    "sensor_id": "FUEL_QUANT",
     "parameter": "Quantity",
     "condition": "<",
     "threshold": 500,
     "faultCode": "LOW_FUEL_QUANTITY",
-    "severity": "HIGH",
+    "severity": "Critical",
     "message": "Fuel quantity below reserve threshold"    
   },
   {
-    "sensorId": "ELEC_BUS",
+    "sensor_id": "ELEC_BUS",
     "parameter": "Voltage",
     "condition": "<",
     "threshold": 20,
     "faultCode": "VOLTAGE_LOW",
-    "severity": "MEDIUM",
+    "severity": "Moderate",
     "message": "Electrical bus voltage too low"    
   }
 ]
