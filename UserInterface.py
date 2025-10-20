@@ -121,7 +121,7 @@ class UserInterface():
                     fieldbackground="white",
                     rowheight=30,
                     font=("Arial", 10))
-        style.map("Treeview", background=[("selected", "#cce5ff")])  # blue highlight on selection
+        style.map("Treeview", background=[("selected", "#a7c7e7")])
 
         columns = ("Sensor ID", "Fault Code", "Severity", "Message", "Timestamp", "Status", "Actions")
         self.table = ttk.Treeview(frame, columns=columns, show="headings", height=10)
@@ -137,9 +137,9 @@ class UserInterface():
 
         # Sample data for rows
         self.all_alerts = [
-            ("01", "ENGTEMP", "Critical", "Engine temp exceeded", "13:48:01", "Active", "ℹ️  ❌"),
-            ("02", "ENGPRESS", "Moderate", "Engine pressure low", "13:52:04", "Active", "ℹ️  ❌"),
-            ("03", "CABIN_PRESS", "Advisory", "Cabin pressure lost", "14:01:01", "Active", "ℹ️  ❌")
+            ("01", "ENGTEMP", "Critical", "Engine temp exceeded", "13:48:01", "Active", "✅    ❌"),
+            ("02", "ENGPRESS", "Moderate", "Engine pressure low", "13:52:04", "Active", "✅    ❌"),
+            ("03", "CABIN_PRESS", "Advisory", "Cabin pressure lost", "14:01:01", "Active", "✅    ❌")
         ]
 
         # Inserts rows with appropriate tags based on severity
