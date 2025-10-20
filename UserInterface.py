@@ -61,7 +61,6 @@ class UserInterface():
     # Creates box for uploading CSV files
     def CreateFileUploadBox(self, parent):
         upload_box = tk.Frame(parent, bg="#e0f0ff", bd=1, relief="solid")
-        upload_box.grid(row=1, column=0, sticky="nsew")
         upload_box.grid(row=1, column=0, sticky="nsew", padx=5, pady=(10, 10))
         upload_box.grid_propagate(False)
         upload_box.grid_rowconfigure(0, weight=1)
@@ -97,12 +96,12 @@ class UserInterface():
             messagebox.showerror(
                 "Invalid File",
                 "Please select a valid CSV file (with .csv extension)."
-        )
+            )
             return
     
+        # Placeholder for when file_path will be sent to sensor integration module
         if file_path:
             messagebox.showinfo("File Uploaded", f"Loaded: {os.path.basename(file_path)}")
-            # TODO: send file_path to sensor integration module 
 
     def CreateAlert(self):
         pass
@@ -123,23 +122,25 @@ class UserInterface():
                     font=("Arial", 10))
         style.map("Treeview", background=[("selected", "#a7c7e7")])
 
-        columns = ("Sensor ID", "Fault Code", "Severity", "Message", "Timestamp", "Status", "Actions")
+        columns = ("Alert ID", "Sensor ID", "Fault Code", "Severity", "Message", "Timestamp", "Status", "Actions")
         self.table = ttk.Treeview(frame, columns=columns, show="headings", height=10)
 
         for col in columns:
             self.table.heading(col, text=col)
-            self.table.column(col, width=120, anchor=tk.CENTER)
+            width = 80 if col in ("Alert ID", "Sensor ID", "Status") else 120
+            self.table.column(col, width=width, anchor=tk.CENTER)
 
         # Defines tag styles for severity levels
         self.table.tag_configure("critical", background="#ff9999")
         self.table.tag_configure("moderate", background="#ffd699")
         self.table.tag_configure("advisory", background="#ffff99")
+        self.table.tag_configure("resolved", background="#d4edda")
 
         # Sample data for rows
         self.all_alerts = [
-            ("01", "ENGTEMP", "Critical", "Engine temp exceeded", "13:48:01", "Active", "✅    ❌"),
-            ("02", "ENGPRESS", "Moderate", "Engine pressure low", "13:52:04", "Active", "✅    ❌"),
-            ("03", "CABIN_PRESS", "Advisory", "Cabin pressure lost", "14:01:01", "Active", "✅    ❌")
+            ("", "01", "ENGTEMP", "Critical", "Engine temp exceeded", "13:48:01", "Active", "✅    ❌"),
+            ("", "02", "ENGPRESS", "Moderate", "Engine pressure low", "13:52:04", "Active", "✅    ❌"),
+            ("", "03", "CABIN_PRESS", "Advisory", "Cabin pressure lost", "14:01:01", "Active", "✅    ❌")
         ]
 
         # Inserts rows with appropriate tags based on severity
@@ -150,13 +151,14 @@ class UserInterface():
 
         self.table.grid(row=0, column=0, sticky="nsew")
         scrollbar.grid(row=0, column=1, sticky="ns")
+        self.table.bind("<Button-1>", self.OnTableClick)
 
     def DisplayAlerts(self, alerts):
         for item in self.table.get_children():
             self.table.delete(item)
 
         for row in alerts:
-            severity = row[2].lower()
+            severity = row[3].lower()
             self.table.insert("", tk.END, values=row, tags=(severity,))
 
     def ShowAllAlerts(self):
@@ -164,20 +166,70 @@ class UserInterface():
 
     # Shows critical alerts when button is pressed
     def ShowCriticalAlerts(self):
-        critical_alerts = [a for a in self.all_alerts if a[2].lower() == "critical"]
+        critical_alerts = [a for a in self.all_alerts if a[3].lower() == "critical"]
         self.DisplayAlerts(critical_alerts)
 
     # Shows moderate alerts when button is pressed
     def ShowModerateAlerts(self):
-        moderate_alerts = [a for a in self.all_alerts if a[2].lower() == "moderate"]
+        moderate_alerts = [a for a in self.all_alerts if a[3].lower() == "moderate"]
         self.DisplayAlerts(moderate_alerts)
 
     # Shows advisory alerts when button is pressed
     def ShowAdvisoryAlerts(self):
-        advisory_alerts = [a for a in self.all_alerts if a[2].lower() == "advisory"]
+        advisory_alerts = [a for a in self.all_alerts if a[3].lower() == "advisory"]
         self.DisplayAlerts(advisory_alerts)
 
-    # Creates the alert graph window
+    def OnTableClick(self, event):
+        # Identifies which cell was clicked
+        region = self.table.identify("region", event.x, event.y)
+        if region != "cell":
+            return
+
+        row_id = self.table.identify_row(event.y)
+        column = self.table.identify_column(event.x)
+
+        if column == "#8":
+            values = list(self.table.item(row_id, "values"))
+            if not values:
+                return
+
+            # Checks where in the Actions column user clicked (left for resolve and right for delete)
+            bbox = self.table.bbox(row_id, column)
+            if not bbox:
+                return
+
+            x_offset = event.x - bbox[0]
+            if x_offset < bbox[2] / 2:
+                self.ResolveAlert(row_id)
+            else:
+                self.DeleteAlert(row_id)
+
+    # Marks alert as resolved
+    def ResolveAlert(self, row_id):
+        values = list(self.table.item(row_id, "values"))
+        if not values:
+            return
+
+        values[6] = "Resolved"
+        values[7] = "☑    ❌"
+        self.table.item(row_id, values=values)
+        self.table.item(row_id, tags=("resolved",))
+
+        alert_id = values[0] if values[0] else "(No ID)"
+        messagebox.showinfo("Alert Resolved", f"Alert {alert_id} marked as resolved.")
+
+    # Deletes an alert
+    def DeleteAlert(self, row_id):
+        values = self.table.item(row_id, "values")
+        if not values:
+            return
+
+        confirm = messagebox.askyesno("Delete Alert", f"Are you sure you want to delete alert {values[0] or '(No ID)'}?")
+        if confirm:
+            self.table.delete(row_id)
+            self.all_alerts = [a for a in self.all_alerts if a[1] != values[1]]
+
+    # Creates the alert graph window placeholder
     def CreateAlertGraph(self, parent):
         frame = tk.Frame(parent, bg="#e9e9e9", height=200, bd=1, relief="solid")
         frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=(0, 10))
