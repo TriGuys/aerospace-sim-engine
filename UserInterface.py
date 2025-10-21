@@ -13,14 +13,14 @@ class UserInterface():
         self.root.state('zoomed')
         self.root.configure(bg="white")
 
-        # Configures the grid layout of two columns for button sidebar and main content.
+        # Configure the grid layout of two columns for button sidebar and main content.
         self.root.grid_columnconfigure(0, weight=1, minsize=200)
         self.root.grid_columnconfigure(1, weight=4)
         self.root.grid_rowconfigure(0, weight=3)
         self.root.grid_rowconfigure(1, weight=1)
 
-    def create_sidebar(self, parent):
-        """Creates the left sidebar with alert filter buttons."""
+    def create_sidebar(self, parent: tk.Widget) -> tk.Frame:
+        """Create the left sidebar with alert filter buttons."""
         sidebar = tk.Frame(parent, bg="#e0f0ff", bd=1, relief="solid")
         sidebar.grid(row=0, column=0, sticky="nswe", padx=5, pady=(10, 0))
 
@@ -60,7 +60,7 @@ class UserInterface():
 
         return sidebar
     
-    def create_file_upload_box(self, parent):
+    def create_file_upload_box(self, parent: tk.Widget) -> None:
         """Create a box for uploading sensor data CSV files."""
         upload_box = tk.Frame(parent, bg="#e0f0ff", bd=1, relief="solid")
         upload_box.grid(row=1, column=0, sticky="nsew", padx=5, pady=(10, 10))
@@ -84,7 +84,7 @@ class UserInterface():
             command=self.upload_csv
         ).pack(pady=10)
 
-    def upload_csv(self):
+    def upload_csv(self) -> None:
         """Handle CSV file selection and basic validation for file type."""
         file_path = filedialog.askopenfilename(
             title="Select Sensor Data CSV",
@@ -105,11 +105,11 @@ class UserInterface():
         if file_path:
             messagebox.showinfo("File Uploaded", f"Loaded: {os.path.basename(file_path)}")
 
-    def create_alert(self):
+    def create_alert(self) -> None:
         """Placeholder for alert creation logic."""
         pass
 
-    def create_alert_table(self, parent):
+    def create_alert_table(self, parent: tk.Widget) -> None:
         """Create the main table showing active alerts."""
         frame = tk.Frame(parent, bg="white")
         frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=10)
@@ -133,7 +133,7 @@ class UserInterface():
             width = 80 if col in ("Alert ID", "Sensor ID", "Status") else 120
             self.table.column(col, width=width, anchor=tk.CENTER)
 
-        # Defines tag styles for severity levels.
+        # Define tag styles for severity levels.
         self.table.tag_configure("critical", background="#ff9999")
         self.table.tag_configure("moderate", background="#ffd699")
         self.table.tag_configure("advisory", background="#ffff99")
@@ -146,7 +146,7 @@ class UserInterface():
             ("", "03", "CABIN_PRESS", "Advisory", "Cabin pressure lost", "14:01:01", "Active", "✅    ❌")
         ]
 
-        # Inserts rows with appropriate tags based on severity.
+        # Insert rows with appropriate tags based on severity.
         self.display_alerts(self.all_alerts)
 
         scrollbar = ttk.Scrollbar(frame, orient="vertical", command=self.table.yview)
@@ -156,7 +156,7 @@ class UserInterface():
         scrollbar.grid(row=0, column=1, sticky="ns")
         self.table.bind("<Button-1>", self.on_table_click)
 
-    def display_alerts(self, alerts):
+    def display_alerts(self, alerts: list[tuple]) -> None:
         """Populate the alert table with data."""
         for item in self.table.get_children():
             self.table.delete(item)
@@ -165,26 +165,26 @@ class UserInterface():
             severity = row[3].lower()
             self.table.insert("", tk.END, values=row, tags=(severity,))
 
-    def show_all_alerts(self):
+    def show_all_alerts(self) -> None:
         """Display all alerts."""
         self.display_alerts(self.all_alerts)
 
-    def show_critical_alerts(self):
+    def show_critical_alerts(self) -> None:
         """Display only critical alerts."""
         critical_alerts = [a for a in self.all_alerts if a[3].lower() == "critical"]
         self.display_alerts(critical_alerts)
 
-    def show_moderate_alerts(self):
+    def show_moderate_alerts(self) -> None:
         """Display only moderate alerts."""
         moderate_alerts = [a for a in self.all_alerts if a[3].lower() == "moderate"]
         self.display_alerts(moderate_alerts)
 
-    def show_advisory_alerts(self):
+    def show_advisory_alerts(self) -> None:
         """Display only advisory alerts."""
         advisory_alerts = [a for a in self.all_alerts if a[3].lower() == "advisory"]
         self.display_alerts(advisory_alerts)
 
-    def on_table_click(self, event):
+    def on_table_click(self, event: tk.Event) -> None:
         """Identify and handle user clicks in the alert table."""
         region = self.table.identify("region", event.x, event.y)
         if region != "cell":
@@ -198,7 +198,7 @@ class UserInterface():
             if not values:
                 return
 
-            # Checks where in the Actions column user clicked (left for resolve and right for delete).
+            # Check where in the Actions column user clicked (left for resolve and right for delete).
             bbox = self.table.bbox(row_id, column)
             if not bbox:
                 return
@@ -209,7 +209,7 @@ class UserInterface():
             else:
                 self.delete_alert(row_id)
 
-    def resolve_alert(self, row_id):
+    def resolve_alert(self, row_id: str) -> None:
         """Mark a selected alert as resolved."""
         values = list(self.table.item(row_id, "values"))
         if not values:
@@ -223,7 +223,7 @@ class UserInterface():
         alert_id = values[0] if values[0] else "(No ID)"
         messagebox.showinfo("Alert Resolved", f"Alert {alert_id} marked as resolved.")
 
-    def delete_alert(self, row_id):
+    def delete_alert(self, row_id: str) -> None:
         """Delete a selected alert after confirmation from the user."""
         values = self.table.item(row_id, "values")
         if not values:
@@ -234,7 +234,7 @@ class UserInterface():
             self.table.delete(row_id)
             self.all_alerts = [a for a in self.all_alerts if a[1] != values[1]]
 
-    def create_alert_graph(self, parent):
+    def create_alert_graph(self, parent: tk.Widget) -> None:
         """Create a placeholder frame for the alert graph window."""
         frame = tk.Frame(parent, bg="#e9e9e9", height=200, bd=1, relief="solid")
         frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=(0, 10))
@@ -247,7 +247,7 @@ class UserInterface():
             font=("Arial", 10, "italic")
         ).pack(pady=40)
 
-    def draw_window(self):
+    def draw_window(self) -> None:
         """Render all of the user interface components."""
         self.create_sidebar(self.root)
         self.create_alert_table(self.root)
