@@ -5,7 +5,7 @@ class AlertModule():
 
     def __init__(self, database: AlertDatabase):
         self.database = database
-        self.alerts : list = AlertDatabase.get_all()
+        self.alerts : list = database.get_all()
 
     def create_alert(self, sensor_id: str, fault_code: str, severity: str, message: str, timestamp: str):
 
