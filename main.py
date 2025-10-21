@@ -2,6 +2,7 @@ import tkinter as tk
 
 from AlertModule import AlertModule
 from FaultDetection import FaultDetection
+from FaultDetection import Fault
 from SensorIntegration import SensorIntegration
 from UserInterface import UserInterface
 
