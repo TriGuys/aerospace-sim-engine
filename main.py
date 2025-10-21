@@ -14,7 +14,7 @@ def main():
     fault_detection = FaultDetection()
     sensor_integration = SensorIntegration()
 
-    UI.DrawWindow()
+    UI.draw_window()
     root.mainloop()
 
 if __name__ == "__main__":
