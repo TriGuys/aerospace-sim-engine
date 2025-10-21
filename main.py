@@ -8,7 +8,9 @@ def main():
     alert_module = AlertModule()
     fault_detection = FaultDetection()
     sensor_integration = SensorIntegration()
-    fault = Fault()
+
+    UI.draw_window()
+    root.mainloop()
 
 if __name__ == "__main__":
     main()
