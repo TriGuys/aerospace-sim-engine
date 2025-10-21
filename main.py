@@ -1,18 +1,21 @@
+import tkinter as tk
+
 from AlertModule import AlertModule
 from FaultDetection import FaultDetection
 from SensorIntegration import SensorIntegration
-from Database import AlertDatabase
+from UserInterface import UserInterface
 
 def main():
-    done = False
+    root = tk.Tk()
 
-    database = AlertDatabase()
-    alert_module = AlertModule(database)
+    UI = UserInterface(root)  
+
+    alert_module = AlertModule()
     fault_detection = FaultDetection()
     sensor_integration = SensorIntegration()
 
-    while not done:
-        pass
+    UI.DrawWindow()
+    root.mainloop()
 
 if __name__ == "__main__":
     main()
