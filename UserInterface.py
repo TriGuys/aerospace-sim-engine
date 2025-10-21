@@ -17,7 +17,7 @@ class UserInterface():
         self.root.grid_rowconfigure(1, weight=1)
 
     # Creates the left sidebar with alert filter buttons
-    def CreateSidebar(self, parent):
+    def create_sidebar(self, parent):
         sidebar = tk.Frame(parent, bg="#e0f0ff", bd=1, relief="solid")
         sidebar.grid(row=0, column=0, sticky="nswe", padx=5, pady=(10, 0))
 
@@ -40,10 +40,10 @@ class UserInterface():
 
         # Defines the buttons and their filter functions
         button_actions = {
-            "All Alerts": self.ShowAllAlerts,
-            "Critical Alerts": self.ShowCriticalAlerts,
-            "Moderate Alerts": self.ShowModerateAlerts,
-            "Advisory Alerts": self.ShowAdvisoryAlerts
+            "All Alerts": self.show_all_alerts,
+            "Critical Alerts": self.show_critical_alerts,
+            "Moderate Alerts": self.show_moderate_alerts,
+            "Advisory Alerts": self.show_advisory_alerts
         }
 
         for text, command in button_actions.items():
@@ -59,7 +59,7 @@ class UserInterface():
         return sidebar
     
     # Creates box for uploading CSV files
-    def CreateFileUploadBox(self, parent):
+    def create_file_upload_box(self, parent):
         upload_box = tk.Frame(parent, bg="#e0f0ff", bd=1, relief="solid")
         upload_box.grid(row=1, column=0, sticky="nsew", padx=5, pady=(10, 10))
         upload_box.grid_propagate(False)
@@ -79,11 +79,11 @@ class UserInterface():
             font=("Arial", 10),
             bg="#f7fbff",
             activebackground="#d0eaff",
-            command=self.UploadCSV
+            command=self.upload_csv
         ).pack(pady=10)
 
     # File upload logic
-    def UploadCSV(self):
+    def upload_csv(self):
         file_path = filedialog.askopenfilename(
             title="Select Sensor Data CSV",
             filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
@@ -103,11 +103,11 @@ class UserInterface():
         if file_path:
             messagebox.showinfo("File Uploaded", f"Loaded: {os.path.basename(file_path)}")
 
-    def CreateAlert(self):
+    def create_alert(self):
         pass
 
     # Creates the main alert table
-    def CreateAlertTable(self, parent):
+    def create_alert_table(self, parent):
         frame = tk.Frame(parent, bg="white")
         frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=10)
         frame.grid_rowconfigure(0, weight=1)
@@ -144,16 +144,16 @@ class UserInterface():
         ]
 
         # Inserts rows with appropriate tags based on severity
-        self.DisplayAlerts(self.all_alerts)
+        self.display_alerts(self.all_alerts)
 
         scrollbar = ttk.Scrollbar(frame, orient="vertical", command=self.table.yview)
         self.table.configure(yscroll=scrollbar.set)
 
         self.table.grid(row=0, column=0, sticky="nsew")
         scrollbar.grid(row=0, column=1, sticky="ns")
-        self.table.bind("<Button-1>", self.OnTableClick)
+        self.table.bind("<Button-1>", self.on_table_click)
 
-    def DisplayAlerts(self, alerts):
+    def display_alerts(self, alerts):
         for item in self.table.get_children():
             self.table.delete(item)
 
@@ -161,25 +161,25 @@ class UserInterface():
             severity = row[3].lower()
             self.table.insert("", tk.END, values=row, tags=(severity,))
 
-    def ShowAllAlerts(self):
-        self.DisplayAlerts(self.all_alerts)
+    def show_all_alerts(self):
+        self.display_alerts(self.all_alerts)
 
     # Shows critical alerts when button is pressed
-    def ShowCriticalAlerts(self):
+    def show_critical_alerts(self):
         critical_alerts = [a for a in self.all_alerts if a[3].lower() == "critical"]
-        self.DisplayAlerts(critical_alerts)
+        self.display_alerts(critical_alerts)
 
     # Shows moderate alerts when button is pressed
-    def ShowModerateAlerts(self):
+    def show_moderate_alerts(self):
         moderate_alerts = [a for a in self.all_alerts if a[3].lower() == "moderate"]
-        self.DisplayAlerts(moderate_alerts)
+        self.display_alerts(moderate_alerts)
 
     # Shows advisory alerts when button is pressed
-    def ShowAdvisoryAlerts(self):
+    def show_advisory_alerts(self):
         advisory_alerts = [a for a in self.all_alerts if a[3].lower() == "advisory"]
-        self.DisplayAlerts(advisory_alerts)
+        self.display_alerts(advisory_alerts)
 
-    def OnTableClick(self, event):
+    def on_table_click(self, event):
         # Identifies which cell was clicked
         region = self.table.identify("region", event.x, event.y)
         if region != "cell":
@@ -200,12 +200,12 @@ class UserInterface():
 
             x_offset = event.x - bbox[0]
             if x_offset < bbox[2] / 2:
-                self.ResolveAlert(row_id)
+                self.resolve_alert(row_id)
             else:
-                self.DeleteAlert(row_id)
+                self.delete_alert(row_id)
 
     # Marks alert as resolved
-    def ResolveAlert(self, row_id):
+    def resolve_alert(self, row_id):
         values = list(self.table.item(row_id, "values"))
         if not values:
             return
@@ -219,7 +219,7 @@ class UserInterface():
         messagebox.showinfo("Alert Resolved", f"Alert {alert_id} marked as resolved.")
 
     # Deletes an alert
-    def DeleteAlert(self, row_id):
+    def delete_alert(self, row_id):
         values = self.table.item(row_id, "values")
         if not values:
             return
@@ -230,7 +230,7 @@ class UserInterface():
             self.all_alerts = [a for a in self.all_alerts if a[1] != values[1]]
 
     # Creates the alert graph window placeholder
-    def CreateAlertGraph(self, parent):
+    def create_alert_graph(self, parent):
         frame = tk.Frame(parent, bg="#e9e9e9", height=200, bd=1, relief="solid")
         frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=(0, 10))
         frame.grid_propagate(False)
@@ -242,8 +242,8 @@ class UserInterface():
             font=("Arial", 10, "italic")
         ).pack(pady=40)
 
-    def DrawWindow(self):
-        self.CreateSidebar(self.root)
-        self.CreateAlertTable(self.root)
-        self.CreateFileUploadBox(self.root)
-        self.CreateAlertGraph(self.root)
+    def draw_window(self):
+        self.create_sidebar(self.root)
+        self.create_alert_table(self.root)
+        self.create_file_upload_box(self.root)
+        self.create_alert_graph(self.root)
