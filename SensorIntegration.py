@@ -4,8 +4,10 @@ import logging
 
 class SensorIntegration():
 
-    def __init__(self):
-        pass
+    REQUIRED_COLS = ["timestamp", "sensor_id", "sensor_type", "value", "unit"]
+
+    def __init__(self) -> None:
+        self.data = pd.DataFrame
 
     def sensor(self):
         pass
@@ -24,3 +26,7 @@ class SensorIntegration():
         logging.info(f"Sensor data loaded successfully with: {len(df)} records.")
         return df
     
+    def validate_data(self, df: pd.DataFrame) -> None:
+        missing = [col for col in self.REQUIRED_COLS if col not in df.columns]
+        if missing:
+            raise ValueError(f"Missing required columns in sensor data: {', ' .join(missing)}")
