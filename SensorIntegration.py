@@ -30,3 +30,16 @@ class SensorIntegration():
         missing = [col for col in self.REQUIRED_COLS if col not in df.columns]
         if missing:
             raise ValueError(f"Missing required columns in sensor data: {', ' .join(missing)}")
+
+    def clean_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        for col in ["sensor_id", "sensor_type", "unit"]:
+            if col in df.columns:
+                df[col] = df[col].astype(str).str.strip()
+
+        df = df.replace({'': pd.NA, 'NA': pd.NA})
+        df = df.dropna(subset=["sensor_id", "value", "timestamp"])
+
+        df["value"] = pd.to_numeric(df["value"], errors='coerce')
+        df = df.dropna(subset=["value"])
+        
+        return df
