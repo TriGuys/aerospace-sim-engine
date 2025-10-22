@@ -7,7 +7,7 @@ class SensorIntegration():
     REQUIRED_COLS = ["timestamp", "sensor_id", "sensor_type", "value", "unit"]
 
     def __init__(self) -> None:
-        self.data = pd.DataFrame
+        self.data = pd.DataFrame | None = None
 
     def sensor(self):
         pass
