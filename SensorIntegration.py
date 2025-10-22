@@ -1,6 +1,7 @@
 import pandas as pd
 from pathlib import Path
 import logging
+import os
 
 class SensorIntegration():
 
@@ -9,11 +10,11 @@ class SensorIntegration():
     def __init__(self) -> None:
         self.data: pd.DataFrame | None = None
 
-    def pass_sensor_data(self):
+    def pass_sensor_data(self) -> None:
         """Placeholder method for passing sensor data to fault detection module."""
         pass
 
-    def read_csv(self, file_path: str) -> pd.DataFrame:
+    def read_csv(self, file_path: str | os.PathLike[str]) -> pd.DataFrame:
         """
         Load and preprocess a CSV file containing sensor readings.
         
@@ -43,7 +44,7 @@ class SensorIntegration():
     
     def _validate_data(self, df: pd.DataFrame) -> None:
         """Ensure the DataFrame contains all required columns."""
-        missing = [col for col in self.REQUIRED_COLS if col not in df.columns]
+        missing: list[str] = [col for col in self.REQUIRED_COLS if col not in df.columns]
         if missing:
             raise ValueError(f"Missing required columns in sensor data: {', ' .join(missing)}")
 
