@@ -41,5 +41,10 @@ class SensorIntegration():
 
         df["value"] = pd.to_numeric(df["value"], errors='coerce')
         df = df.dropna(subset=["value"])
-        
+
         return df
+    
+    def get_sensor_data(self) -> pd.DataFrame:
+        if self.data is None:
+            raise ValueError("No sensor data has been loaded yet.")
+        return self.data
