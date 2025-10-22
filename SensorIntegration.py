@@ -31,6 +31,7 @@ class SensorIntegration():
 
         file = Path(file_path)
         if not file.exists():
+            logging.error(f"File not found: {file_path}")
             raise FileNotFoundError(f"File not found: {file_path}")
         logging.info(f"Loading sensor data from: {file_path}")
         df = pd.read_csv(file)
@@ -46,23 +47,30 @@ class SensorIntegration():
         """Ensure the DataFrame contains all required columns."""
         missing: list[str] = [col for col in self.REQUIRED_COLS if col not in df.columns]
         if missing:
-            raise ValueError(f"Missing required columns in sensor data: {', ' .join(missing)}")
+            logging.error(f"Missing required columns in sensor data: {', '.join(missing)}")
+            raise ValueError(f"Missing required columns in sensor data: {', '.join(missing)}")
 
     def _clean_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """Clean and preprocess the sensor data."""
-        for col in ["sensor_id", "sensor_type", "unit"]:
-            if col in df.columns:
-                df[col] = df[col].astype(str).str.strip()
+        try:
+            for col in ["sensor_id", "sensor_type", "unit"]:
+              if col in df.columns:
+                   df[col] = df[col].astype(str).str.strip()
 
-        df = df.replace({"": pd.NA, " ": pd.NA, "NA": pd.NA})
-        df = df.dropna(subset=["sensor_id", "value", "timestamp"])
+            df = df.replace({"": pd.NA, " ": pd.NA, "NA": pd.NA})
+            df = df.dropna(subset=["sensor_id", "value", "timestamp"])
 
-        df["value"] = pd.to_numeric(df["value"], errors='coerce')
-        df = df.dropna(subset=["value"])
+            df["value"] = pd.to_numeric(df["value"], errors='coerce')
+            df = df.dropna(subset=["value"])
 
-        return df
+            return df
+        
+        except Exception as e:
+            logging.error(f"Error during data cleaning: {e}")
+            raise ValueError(f"Error during data cleaning: {e}")
     
     def get_sensor_data(self) -> pd.DataFrame:
         if self.data is None:
+            logging.error("No sensor data has been loaded yet.")
             raise ValueError("No sensor data has been loaded yet.")
         return self.data
