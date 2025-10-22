@@ -7,9 +7,9 @@ class SensorIntegration():
     REQUIRED_COLS = ["timestamp", "sensor_id", "sensor_type", "value", "unit"]
 
     def __init__(self) -> None:
-        self.data = pd.DataFrame | None = None
+        self.data: pd.DataFrame | None = None
 
-    def sensor(self):
+    def pass_sensor_data(self):
         pass
 
     def read_csv(self, file_path: str) -> pd.DataFrame:
@@ -26,12 +26,12 @@ class SensorIntegration():
         logging.info(f"Sensor data loaded successfully with: {len(df)} records.")
         return df
     
-    def validate_data(self, df: pd.DataFrame) -> None:
+    def _validate_data(self, df: pd.DataFrame) -> None:
         missing = [col for col in self.REQUIRED_COLS if col not in df.columns]
         if missing:
             raise ValueError(f"Missing required columns in sensor data: {', ' .join(missing)}")
 
-    def clean_data(self, df: pd.DataFrame) -> pd.DataFrame:
+    def _clean_data(self, df: pd.DataFrame) -> pd.DataFrame:
         for col in ["sensor_id", "sensor_type", "unit"]:
             if col in df.columns:
                 df[col] = df[col].astype(str).str.strip()
