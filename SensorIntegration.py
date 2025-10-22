@@ -50,6 +50,16 @@ class SensorIntegration():
             logging.error(f"Missing required columns in sensor data: {', '.join(missing)}")
             raise ValueError(f"Missing required columns in sensor data: {', '.join(missing)}")
 
+        duplicates = df.columns[df.columns.duplicated()].tolist()
+        if duplicates:
+            logging.error(f"Duplicate columns found in sensor data: {', '.join(duplicates)}")
+            raise ValueError(f"Duplicate columns found in sensor data: {', '.join(duplicates)}")
+        
+        extra = [col for col in df.columns if col not in self.REQUIRED_COLS]
+        if extra:
+            logging.warning(f"Unexpected extra columns in sensor data: {', '.join(extra)}")
+            raise ValueError(f"Unexpected extra columns in sensor data: {', '.join(extra)}")
+
     def _clean_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """Clean and preprocess the sensor data."""
         try:
