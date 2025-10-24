@@ -231,6 +231,13 @@ class UserInterface():
         values = list(self.table.item(row_id, "values"))
         if not values:
             return
+        
+        alert_id = values[0]
+        if self.alert_module and alert_id:
+            try:
+                self.alert_module.resolve_alert(int(alert_id))
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to resolve alert: {e}")
 
         values[6] = "Resolved"
         values[7] = "☑    ❌"
