@@ -1,4 +1,5 @@
 import logging
+from typing import List, Optional
 from Abstractions import AlertCreation, Alert
 from Database import AlertDatabase
 
@@ -6,9 +7,10 @@ from Database import AlertDatabase
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 class AlertModule:
-    def __init__(self, database: AlertDatabase):
-        self.database = database
-        self.alerts : list[Alert] = self.database.get_all()
+    def __init__(self, database: AlertDatabase) -> None:
+        """Initialise the AlertModule with a reference to the AlertDatabase."""
+        self.database: AlertDatabase = database
+        self.alerts: List[Alert] = self.database.get_all()
         logging.info("AlertModule initialised with %d existing alerts.", len(self.alerts))
 
     def create_alert(self, sensor_id: str, fault_code: str, severity: str, message: str, timestamp: str) -> Alert:
@@ -22,7 +24,7 @@ class AlertModule:
                 timestamp = timestamp
             )
 
-            alert = self.database.create(create_alert)
+            alert: Alert = self.database.create(create_alert)
             self.alerts.append(alert)
 
             logging.info(
@@ -35,7 +37,7 @@ class AlertModule:
             logging.error("Failed to create alert for sensor '%s': %s", sensor_id, e)
             raise
     
-    def get_all_alerts(self) -> list[Alert]:
+    def get_all_alerts(self) -> List[Alert]:
         """Retrieve all alerts from the database."""
         try:
             self.alerts = self.database.get_all()
@@ -52,13 +54,17 @@ class AlertModule:
     def delete_alert(self, alert_id: int) -> bool:
         """Delete an alert from the database."""
         try:
-            deleted = self.database.delete(alert_id)
+            alert_id = int(alert_id)
+            deleted: bool = self.database.delete(alert_id)
             if deleted:
                 self.alerts = [a for a in self.alerts if a.alert_id != alert_id]
                 logging.info("Deleted alert ID %d successfully.", alert_id)
             else:
                 logging.warning("Attempted to delete alert ID %d, but it was not found.", alert_id)
             return deleted
+        except ValueError:
+            logging.error("Invalid alert ID provided: %s (must be numeric)", alert_id)
+            return False
         except Exception as e:
             logging.error("Failed to delete alert ID %d: %s", alert_id, e)
             raise
