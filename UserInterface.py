@@ -271,19 +271,22 @@ class UserInterface():
 
         confirm = messagebox.askyesno("Delete Alert", f"Are you sure you want to delete alert {alert_id or '(No ID)'}?")
         if confirm:
-            # Delete alert from backend if available.
-            if self.alert_module:
-                try:
-                    self.alert_module.delete_alert(int(alert_id))
-                except ValueError:
-                    messagebox.showerror("Error", f"Invalid alert ID: {alert_id}")
+            # Only delete from User Interface if backend deletion succeeds.
+            try:
+                deleted = self.alert_module.delete_alert(int(alert_id))
+                if not deleted:
+                    messagebox.showwarning("Delete Failed", f"Alert {alert_id} could not be deleted from the database.")
                     return
-                except Exception as e:
-                    messagebox.showerror("Error", f"Failed to delete alert: {e}")
-                    return
+            except ValueError:
+                messagebox.showerror("Error", f"Invalid alert ID: {alert_id}")
+                return
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to delete alert: {e}")
+                return
 
             self.table.delete(row_id)
             self.all_alerts = [a for a in self.all_alerts if str(a[0]) != str(alert_id)]
+            messagebox.showinfo("Alert Deleted", f"Alert {alert_id} deleted successfully.")
 
     def create_alert_graph(self, parent: tk.Widget) -> None:
         """Create a placeholder frame for the alert graph window."""
