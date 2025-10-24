@@ -6,9 +6,10 @@ from PIL import Image, ImageTk
 class UserInterface():
     """Tkinter based user interface for the HeMoSys Aircraft Health Monitoring System."""
 
-    def __init__(self, root: tk.Tk) -> None:
+    def __init__(self, root: tk.Tk, alert_module = None) -> None:
         """Initialise the main application window and grid layout."""
         self.root = root
+        self.alert_module = alert_module
         self.root.title("HeMoSys - Aircraft Health Monitoring System")
         self.root.state('zoomed')
         self.root.configure(bg="white")
@@ -139,12 +140,28 @@ class UserInterface():
         self.table.tag_configure("advisory", background="#ffff99")
         self.table.tag_configure("resolved", background="#d4edda")
 
-        # Sample data for rows.
-        self.all_alerts = [
-            ("", "01", "ENGTEMP", "Critical", "Engine temp exceeded", "13:48:01", "Active", "✅    ❌"),
-            ("", "02", "ENGPRESS", "Moderate", "Engine pressure low", "13:52:04", "Active", "✅    ❌"),
-            ("", "03", "CABIN_PRESS", "Advisory", "Cabin pressure lost", "14:01:01", "Active", "✅    ❌")
-        ]
+        # Load alerts dynamically from the backend.
+        if self.alert_module:
+            self.all_alerts = [
+                (
+                    alert.alert_id,
+                    alert.sensor_id,
+                    alert.fault_code,
+                    alert.severity,
+                    alert.message,
+                    alert.timestamp,
+                    "Active",
+                    "✅    ❌"
+                )
+                for alert in self.alert_module.get_all_alerts()
+            ]
+        else:
+        # Fallback to show placeholder demo data.
+            self.all_alerts = [
+                ("", "01", "ENGTEMP", "Critical", "Engine temp exceeded", "13:48:01", "Active", "✅    ❌"),
+                ("", "02", "ENGPRESS", "Moderate", "Engine pressure low", "13:52:04", "Active", "✅    ❌"),
+                ("", "03", "CABIN_PRESS", "Advisory", "Cabin pressure lost", "14:01:01", "Active", "✅    ❌")
+            ]
 
         # Insert rows with appropriate tags based on severity.
         self.display_alerts(self.all_alerts)
