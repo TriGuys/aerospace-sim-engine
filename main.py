@@ -3,14 +3,22 @@ from AlertModule import AlertModule
 from FaultDetection import FaultDetection
 from FaultDetection import Fault
 from SensorIntegration import SensorIntegration
+from UserInterface import UserInterface
+
+class Main:
+    def __init__(self):
+        self.alertModule = AlertModule()
+        self.faultDetection = FaultDetection()
+        self.sensorIntegration = SensorIntegration()
 
 def main():
-    alert_module = AlertModule()
-    fault_detection = FaultDetection()
-    sensor_integration = SensorIntegration()
+    root = tk.Tk()
 
-    UI.draw_window()
+    UI = Main()
+    UI.alertModule
+
     root.mainloop()
+
 
 if __name__ == "__main__":
     main()

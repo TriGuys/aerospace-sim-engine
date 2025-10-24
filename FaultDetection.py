@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import pandas as pd
 import json
 import logging
@@ -6,44 +5,11 @@ from pathlib import Path
 from Abstractions import Fault, Severity, Status
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-=======
-import datetime
-import json
-import logging
-from pathlib import Path
-
-class Severity(Enum):
-    LOW = 1
-    MEDIUM = 2
-    HIGH = 3
-    CRITICAL = 4
-
-class Status(Enum):
-    ACTIVE = 1
-    RESOLVED = 2
-
-class Fault():
-    def __init__(self, faultID: str, severity: Severity, description: str, timestamp: datetime.datetime, status: Status, sensor_id=None):
-        self.faultID = faultID
-        self.severity = severity
-        self.description = description
-        self.timestamp = timestamp
-        self.status = status
-        self.sensor_id = sensor_id
->>>>>>> 0aa9189 (correct type hints for fault class and getActiveFaults function)
 
 class FaultDetection():
     def __init__(self):
         self.activeFaults = []
         self.detectionRules = []
-    
-    # Loads fault detection rules from a JSON file    
-    def loadRules(self, file_path: str):
-        with open(Path(file_path), "r") as f:
-            rules = json.load(f)
-        for rule in rules:
-            rule["severity"] = Severity[rule["severity"].capitalize()]
-        self.detectionRules = rules
     
     # Loads fault detection rules from a JSON file    
     def loadRules(self, file_path: str):
@@ -59,29 +25,6 @@ class FaultDetection():
 
         This method evaluates sensor data against all of the fault detection rules. 
         If a rule condition is met, a corresponding `Fault` object is created and added to the list of detected faults.
-
-        Note:
-            This method is called internally by detectFromBatch(), 
-            which applies detection to an entire pandas DataFrame.
-
-        Args:
-            sensorData (dict): 
-                A dictionary representing one sensor data record, expected to include:
-                - "timestamp" (str): The time the reading was taken.
-                - "sensor_id" (str): The unique identifier of the sensor.
-                - "sensorType" (str): The category or measurement type (e.g. Temperature, Pressure).
-                - "value" (float or int): The numeric reading from the sensor.
-                - "unit" (str): The unit of measurement for the sensor value (e.g., "°C", "psi", "V").
-
-        Returns:
-            list[Fault]: 
-                A list of Fault objects representing all of the faults detected
-                for this specific sensor record. Returns an empty list if
-                none of the fault rules were triggered.
-        """
-
-        """
-        Applies fault detection rules to a single sensor data record (as a dictionary).
 
         Note:
             This method is called internally by detectFromBatch(), 
@@ -153,14 +96,6 @@ class FaultDetection():
             )
             return False
 
-<<<<<<< HEAD
     # Returns a list of faults that are active and should be passed to the AlertModule.
-=======
-    # takes a fault and isolates it
-    def isolateFault(self, fault: Fault) -> Fault:
-        return fault
-
-    # Returns a list of currently active faults
->>>>>>> 0aa9189 (correct type hints for fault class and getActiveFaults function)
     def getActiveFaults(self) -> list:
         return self.activeFaults
