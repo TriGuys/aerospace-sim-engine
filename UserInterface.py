@@ -233,9 +233,18 @@ class UserInterface():
             return
         
         alert_id = values[0]
+
+        # Check that alert_id is not empty or invalid.
+        if not alert_id or str(alert_id).strip() == "":
+            messagebox.showwarning("Invalid Alert", "Cannot resolve an alert without a valid ID.")
+            return 
+        
         if self.alert_module and alert_id:
             try:
                 self.alert_module.resolve_alert(int(alert_id))
+            except ValueError:
+                messagebox.showerror("Error", f"Invalid alert ID: {alert_id}")
+                return
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to resolve alert: {e}")
 
@@ -254,12 +263,21 @@ class UserInterface():
             return
         
         alert_id = values[0]
+
+        # Check that alert_id is not empty or invalid.
+        if not alert_id or str(alert_id).strip() == "":
+            messagebox.showwarning("Invalid Alert", "Cannot delete an alert without a valid ID.")
+            return
+
         confirm = messagebox.askyesno("Delete Alert", f"Are you sure you want to delete alert {alert_id or '(No ID)'}?")
         if confirm:
             # Delete alert from backend if available.
-            if self.alert_module and alert_id:
+            if self.alert_module:
                 try:
                     self.alert_module.delete_alert(int(alert_id))
+                except ValueError:
+                    messagebox.showerror("Error", f"Invalid alert ID: {alert_id}")
+                    return
                 except Exception as e:
                     messagebox.showerror("Error", f"Failed to delete alert: {e}")
                     return
