@@ -245,11 +245,20 @@ class UserInterface():
         values = self.table.item(row_id, "values")
         if not values:
             return
-
-        confirm = messagebox.askyesno("Delete Alert", f"Are you sure you want to delete alert {values[0] or '(No ID)'}?")
+        
+        alert_id = values[0]
+        confirm = messagebox.askyesno("Delete Alert", f"Are you sure you want to delete alert {alert_id or '(No ID)'}?")
         if confirm:
+            # Delete alert from backend if available.
+            if self.alert_module and alert_id:
+                try:
+                    self.alert_module.delete_alert(int(alert_id))
+                except Exception as e:
+                    messagebox.showerror("Error", f"Failed to delete alert: {e}")
+                    return
+
             self.table.delete(row_id)
-            self.all_alerts = [a for a in self.all_alerts if a[1] != values[1]]
+            self.all_alerts = [a for a in self.all_alerts if str(a[0]) != str(alert_id)]
 
     def create_alert_graph(self, parent: tk.Widget) -> None:
         """Create a placeholder frame for the alert graph window."""
