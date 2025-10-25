@@ -3,6 +3,7 @@ from UserInterface import UserInterface
 from AlertModule import AlertModule
 from Database import AlertDatabase
 from FaultDetection import FaultDetection
+from FaultDetection import Fault
 from SensorIntegration import SensorIntegration
 
 def main():
