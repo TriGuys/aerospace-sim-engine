@@ -6,9 +6,10 @@ from PIL import Image, ImageTk
 class UserInterface():
     """Tkinter based user interface for the HeMoSys Aircraft Health Monitoring System."""
 
-    def __init__(self, root: tk.Tk) -> None:
+    def __init__(self, root: tk.Tk, alert_module = None) -> None:
         """Initialise the main application window and grid layout."""
         self.root = root
+        self.alert_module = alert_module
         self.root.title("HeMoSys - Aircraft Health Monitoring System")
         self.root.state('zoomed')
         self.root.configure(bg="white")
@@ -139,12 +140,28 @@ class UserInterface():
         self.table.tag_configure("advisory", background="#ffff99")
         self.table.tag_configure("resolved", background="#d4edda")
 
-        # Sample data for rows.
-        self.all_alerts = [
-            ("", "01", "ENGTEMP", "Critical", "Engine temp exceeded", "13:48:01", "Active", "✅    ❌"),
-            ("", "02", "ENGPRESS", "Moderate", "Engine pressure low", "13:52:04", "Active", "✅    ❌"),
-            ("", "03", "CABIN_PRESS", "Advisory", "Cabin pressure lost", "14:01:01", "Active", "✅    ❌")
-        ]
+        # Load alerts dynamically from the backend.
+        if self.alert_module:
+            self.all_alerts = [
+                (
+                    alert.alert_id,
+                    alert.sensor_id,
+                    alert.fault_code,
+                    alert.severity,
+                    alert.message,
+                    alert.timestamp,
+                    "Active",
+                    "✅    ❌"
+                )
+                for alert in self.alert_module.get_all_alerts()
+            ]
+        else:
+        # Fallback to show placeholder demo data.
+            self.all_alerts = [
+                ("", "01", "ENGTEMP", "Critical", "Engine temp exceeded", "13:48:01", "Active", "✅    ❌"),
+                ("", "02", "ENGPRESS", "Moderate", "Engine pressure low", "13:52:04", "Active", "✅    ❌"),
+                ("", "03", "CABIN_PRESS", "Advisory", "Cabin pressure lost", "14:01:01", "Active", "✅    ❌")
+            ]
 
         # Insert rows with appropriate tags based on severity.
         self.display_alerts(self.all_alerts)
@@ -214,6 +231,22 @@ class UserInterface():
         values = list(self.table.item(row_id, "values"))
         if not values:
             return
+        
+        alert_id = values[0]
+
+        # Check that alert_id is not empty or invalid.
+        if not alert_id or str(alert_id).strip() == "":
+            messagebox.showwarning("Invalid Alert", "Cannot resolve an alert without a valid ID.")
+            return 
+        
+        if self.alert_module and alert_id:
+            try:
+                self.alert_module.resolve_alert(int(alert_id))
+            except ValueError:
+                messagebox.showerror("Error", f"Invalid alert ID: {alert_id}")
+                return
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to resolve alert: {e}")
 
         values[6] = "Resolved"
         values[7] = "☑    ❌"
@@ -228,11 +261,32 @@ class UserInterface():
         values = self.table.item(row_id, "values")
         if not values:
             return
+        
+        alert_id = values[0]
 
-        confirm = messagebox.askyesno("Delete Alert", f"Are you sure you want to delete alert {values[0] or '(No ID)'}?")
+        # Check that alert_id is not empty or invalid.
+        if not alert_id or str(alert_id).strip() == "":
+            messagebox.showwarning("Invalid Alert", "Cannot delete an alert without a valid ID.")
+            return
+
+        confirm = messagebox.askyesno("Delete Alert", f"Are you sure you want to delete alert {alert_id or '(No ID)'}?")
         if confirm:
+            # Only delete from User Interface if backend deletion succeeds.
+            try:
+                deleted = self.alert_module.delete_alert(int(alert_id))
+                if not deleted:
+                    messagebox.showwarning("Delete Failed", f"Alert {alert_id} could not be deleted from the database.")
+                    return
+            except ValueError:
+                messagebox.showerror("Error", f"Invalid alert ID: {alert_id}")
+                return
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to delete alert: {e}")
+                return
+
             self.table.delete(row_id)
-            self.all_alerts = [a for a in self.all_alerts if a[1] != values[1]]
+            self.all_alerts = [a for a in self.all_alerts if str(a[0]) != str(alert_id)]
+            messagebox.showinfo("Alert Deleted", f"Alert {alert_id} deleted successfully.")
 
     def create_alert_graph(self, parent: tk.Widget) -> None:
         """Create a placeholder frame for the alert graph window."""
