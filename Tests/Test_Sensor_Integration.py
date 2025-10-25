@@ -20,6 +20,16 @@ class TestSensorIntegration(unittest.TestCase):
         """Clean up the temporary directory."""
         self.tmpdir.cleanup()
 
+    # Helpers
+    def _csv_path(self, name: str) -> Path:
+        """Get a Path in the temporary directory for a CSV file."""
+        return self.tmp_path / name
+    
+    def _write_df(self, df: pd.DataFrame, path: Path) -> None:
+        """Write a DataFrame to CSV at the given path."""
+        df.to_csv(path, index=False)
+
+    # Tests
     def test_get_sensor_data_before_load_raises(self):
         pass
 
