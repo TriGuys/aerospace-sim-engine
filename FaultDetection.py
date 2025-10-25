@@ -35,7 +35,7 @@ class FaultDetection():
                 A dictionary representing one sensor data record, expected to include:
                 - "timestamp" (str): The time the reading was taken.
                 - "sensor_id" (str): The unique identifier of the sensor.
-                - "sensorType" (str): The category or measurement type (e.g. Temperature, Pressure).
+                - "sensor_type" (str): The category or measurement type (e.g. Temperature, Pressure).
                 - "value" (float or int): The numeric reading from the sensor.
                 - "unit" (str): The unit of measurement for the sensor value (e.g., "°C", "psi", "V").
 
