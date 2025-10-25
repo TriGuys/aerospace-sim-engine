@@ -1,7 +1,10 @@
 import os
 import tkinter as tk
+import logging
 from tkinter import ttk, filedialog, messagebox
 from PIL import Image, ImageTk
+from FaultDetection import FaultDetection
+from SensorIntegration import SensorIntegration
 
 class UserInterface():
     """Tkinter based user interface for the HeMoSys Aircraft Health Monitoring System."""
@@ -10,6 +13,8 @@ class UserInterface():
         """Initialise the main application window and grid layout."""
         self.root = root
         self.alert_module = alert_module
+        self.fault_detection = FaultDetection()
+        self.sensor_integration = SensorIntegration()
         self.root.title("HeMoSys - Aircraft Health Monitoring System")
         self.root.state('zoomed')
         self.root.configure(bg="white")
@@ -103,8 +108,47 @@ class UserInterface():
             return
     
         # Placeholder for when file_path will be sent to sensor integration module.
-        if file_path:
-            messagebox.showinfo("File Uploaded", f"Loaded: {os.path.basename(file_path)}")
+        try:
+            # Load CSV into a pandas DataFrame.
+            df = self.sensor_integration.read_csv(file_path)
+
+            # Detect faults in the DataFrame.
+            rules_path = os.path.join(os.path.dirname(__file__), "fault_rules.json")
+            self.fault_detection.loadRules(rules_path)
+
+            faults = self.fault_detection.detectFromBatch(df)
+
+            # Create alerts from each fault.
+            for fault in faults:
+                self.alert_module.create_alert(
+                sensor_id=fault.sensor_id,
+                fault_code=fault.fault_id,
+                severity=fault.severity.name,
+                message=fault.description,
+                timestamp=fault.timestamp
+            )
+                
+            # Reload the table with the latest alerts.
+            self.all_alerts = [
+                (
+                alert.alert_id,
+                alert.sensor_id,
+                alert.fault_code,
+                alert.severity,
+                alert.message,
+                alert.timestamp,
+                "Active",
+                "✅    ❌"
+                )
+                for alert in self.alert_module.get_all_alerts()
+            ]
+
+            self.display_alerts(self.all_alerts)
+            logging.info(f"Detected {len(faults)} fault(s) from {file_path}")
+            messagebox.showinfo("Success", f"Processed and loaded {len(faults)} fault(s) from {file_path}")
+
+        except Exception as e:
+            messagebox.showerror("Processing Error", f"An error occurred while processing the file:\n{e}")
 
     def create_alert(self) -> None:
         """Placeholder for alert creation logic."""
