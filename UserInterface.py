@@ -107,7 +107,6 @@ class UserInterface():
             )
             return
     
-        # Placeholder for when file_path will be sent to sensor integration module.
         try:
             # Load CSV into a pandas DataFrame.
             df = self.sensor_integration.read_csv(file_path)
@@ -120,25 +119,25 @@ class UserInterface():
 
             # Create alerts from each fault.
             for fault in faults:
-                self.alert_module.create_alert(
-                sensor_id=fault.sensor_id,
-                fault_code=fault.fault_id,
-                severity=fault.severity.name,
-                message=fault.description,
-                timestamp=fault.timestamp
-            )
+                self.alert_module.create_alert (
+                    sensor_id=fault.sensor_id,
+                    fault_code=fault.fault_id,
+                    severity=fault.severity.name,
+                    message=fault.description,
+                    timestamp=fault.timestamp
+                )
                 
             # Reload the table with the latest alerts.
             self.all_alerts = [
                 (
-                alert.alert_id,
-                alert.sensor_id,
-                alert.fault_code,
-                alert.severity,
-                alert.message,
-                alert.timestamp,
-                "Active",
-                "✅    ❌"
+                    alert.alert_id,
+                    alert.sensor_id,
+                    alert.fault_code,
+                    alert.severity,
+                    alert.message,
+                    alert.timestamp,
+                    "Active",
+                    "✅    ❌"
                 )
                 for alert in self.alert_module.get_all_alerts()
             ]
@@ -175,7 +174,20 @@ class UserInterface():
 
         for col in columns:
             self.table.heading(col, text=col)
-            width = 80 if col in ("Alert ID", "Sensor ID", "Status") else 120
+
+            if col == "Alert ID":
+                width = 60
+            elif col  == "Status":
+                width = 90
+            elif col == "Fault Code":
+                width = 180
+            elif col in ("Severity", "Timestamp", "Actions"):
+                width = 100
+            elif col == "Message":
+                width = 260
+            else:
+                width = 120
+
             self.table.column(col, width=width, anchor=tk.CENTER)
 
         # Define tag styles for severity levels.

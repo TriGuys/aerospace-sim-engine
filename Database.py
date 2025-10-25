@@ -74,7 +74,7 @@ class AlertDatabase:
                 """
                 SELECT alert_id, sensor_id, fault_code, severity, message, timestamp
                 FROM alerts
-                ORDER BY alert_id DESC
+                ORDER BY alert_id ASC
                 """
             ).fetchall()
         return [Alert(**dict(r)) for r in rows]
