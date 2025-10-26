@@ -4,8 +4,6 @@ from pathlib import Path
 from typing import Optional
 from Abstractions import Alert, AlertCreation
 
-hour_minute_second = re.compile(r"^\d{2}:\d{2}:\d{2}$")
-
 class AlertDatabase:
 
     def __init__(self, db_path: str = "alerts.db") -> None:
@@ -35,22 +33,29 @@ class AlertDatabase:
 
     @staticmethod # doesn't require the class, just simply a utility function.
     def _validate_timestamp(ts: str) -> None:
+        hour_minute_second = re.compile(r"^\d{2}:\d{2}:\d{2}$")
         if not hour_minute_second.match(ts):
             raise ValueError("timestamp must be HH:MM:SS")
 
-    def create(self, alert: AlertCreation) -> int:
+    def create(self, alert: AlertCreation) -> Alert:
         self._validate_timestamp(alert.timestamp)
         try:
             with self._connect() as con:
-                cur = con.execute(
-                    "INSERT INTO alerts(sensor_id,fault_code,severity,message,timestamp) VALUES (?,?,?,?,?)",
-                    (alert.sensor_id,
+                row = con.execute(
+                    """
+                    INSERT INTO alerts(sensor_id,fault_code,severity,message,timestamp) 
+                    VALUES (?,?,?,?,?)
+                    RETURNING alert_id, sensor_id, fault_code, severity, message, timestamp
+                    """,
+                    (
+                    alert.sensor_id,
                     alert.fault_code,
                     alert.severity,
                     alert.message,
-                    alert.timestamp)
-                )
-                return cur.lastrowid
+                    alert.timestamp
+                    ),
+                ).fetchone()
+                return Alert(**dict(row))
         except sqlite3.IntegrityError as e:
             raise ValueError(f"Invalid alert data: {e}")
 
