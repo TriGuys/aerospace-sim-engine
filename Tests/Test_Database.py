@@ -9,7 +9,7 @@ from Database import AlertDatabase
 from Abstractions import AlertCreation
 
 class TestDatabase(unittest.TestCase):
-    
+
     def setUp(self):
         """Create a temporary directory for test files."""
         self.tmpdir = tempfile.TemporaryDirectory()
@@ -20,4 +20,17 @@ class TestDatabase(unittest.TestCase):
         """Clean up the temporary directory."""
         self.tmpdir.cleanup()
 
-    
+    def test_add_and_get_alert(self):
+        pass
+
+    def test_get_missing_returns_none(self):
+        pass
+
+    def test_delete_alert(self):
+        pass
+
+    def test_get_all_descending(self):
+        pass
+
+if __name__ == "__main__":
+    unittest.main()
