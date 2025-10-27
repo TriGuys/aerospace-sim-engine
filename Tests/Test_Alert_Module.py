@@ -16,8 +16,26 @@ class TestAlertModule(unittest.TestCase):
         self.tmp_path = Path(self.tmpdir.name)
         self.db_path = self.tmp_path / "alerts.db"
         self.db = AlertDatabase(str(self.db_path))
-        self.am = AlertModule(self.db)
+        self.mod = AlertModule(self.db)
 
     def tearDown(self):
         """Clean up the temporary directory."""
         self.tmpdir.cleanup()
+
+    def test_initial_state_no_alerts(self):
+        pass
+
+    def test_create_alert(self):
+        pass
+
+    def test_get_alert(self):
+        pass
+
+    def test_delete_alert(self):
+        pass
+
+    def test_delete_nonexistent_alert(self):
+        pass
+
+if __name__ == '__main__':
+    unittest.main()
