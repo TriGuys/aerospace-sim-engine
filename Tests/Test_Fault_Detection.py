@@ -20,3 +20,18 @@ class TestFaultDetection(unittest.TestCase):
     def tearDown(self):
         """Clean up the temporary directory."""
         self.tmpdir.cleanup()
+
+    def test_rules_loaded(self):
+        pass
+
+    def test_detect_from_batch_triggers_fault(self):
+        pass
+    
+    def test_detect_from_batch_no_faults(self):
+        pass
+
+    def test_detect_from_batch_empty_data(self):
+        pass
+
+if __name__ == '__main__':
+    unittest.main()
