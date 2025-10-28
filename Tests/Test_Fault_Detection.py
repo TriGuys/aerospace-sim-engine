@@ -16,6 +16,8 @@ class TestFaultDetection(unittest.TestCase):
         self.tmpdir = tempfile.TemporaryDirectory()
         self.tmp_path = Path(self.tmpdir.name)
         self.fd = FaultDetection()
+        # Load fault detection rules from a JSON file
+        self.fd.loadRules("fault_rules.json")
 
     def tearDown(self):
         """Clean up the temporary directory."""
@@ -28,7 +30,7 @@ class TestFaultDetection(unittest.TestCase):
     def test_detect_from_batch_triggers_fault(self):
         """Test that detect_from_batch identifies faults in sensor data."""
         # Create sample sensor data with a known fault
-        df = pd.DataFrame({
+        df = pd.DataFrame([
             {"timestamp": "t1", "sensor_id": "ENG_OILTEMP", "sensorType": "Temperature", "value": 230, "unit": "C"},
             {"timestamp": "t2", "sensor_id": "ENG_OILPRESS", "sensorType": "Pressure", "value": 900, "unit": "kPa"},
             {"timestamp": "t3", "sensor_id": "CABIN_PRESS", "sensorType": "Pressure", "value": 9500, "unit": "ft"},
@@ -36,7 +38,7 @@ class TestFaultDetection(unittest.TestCase):
             {"timestamp": "t5", "sensor_id": "FUEL_FLOW", "sensorType": "Flow Rate", "value": 50, "unit": "kg/h"},
             {"timestamp": "t6", "sensor_id": "FUEL_QUANT", "sensorType": "Quantity", "value": 400, "unit": "kg"},
             {"timestamp": "t7", "sensor_id": "ELEC_BUS", "sensorType": "Voltage", "value": 18, "unit": "V"},
-        })
+        ])
 
         faults = self.fd.detectFromBatch(df)
         self.assertEqual(len(faults), 7)
