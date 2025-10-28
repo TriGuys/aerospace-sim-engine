@@ -27,7 +27,7 @@ class TestDatabase(unittest.TestCase):
             fault_code="F001",
             severity="high",
             message="Test fault",
-            timestamp="2025-01-01T00:00:00Z",
+            timestamp="00:00:00",
         )
         alert_id = self.db.create(a)
         retrieved = self.db.get(alert_id)
@@ -38,6 +38,18 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(retrieved.severity, a.severity)
         self.assertEqual(retrieved.message, a.message)
         self.assertEqual(retrieved.timestamp, a.timestamp)
+
+    def test_create_rejects_invalid_timestamp(self):
+        """Test that creating an alert with an invalid timestamp raises ValueError."""
+        bad = AlertCreation(
+            sensor_id="sensor_invalid",
+            fault_code="F999",
+            severity="low",
+            message="Invalid timestamp test",
+            timestamp="25:61:99",
+        )
+        with self.assertRaises(ValueError):
+            self.db.create(bad)
 
     def test_get_missing_returns_none(self):
         """Test retrieving a non-existent alert."""
@@ -50,7 +62,7 @@ class TestDatabase(unittest.TestCase):
             fault_code="F001",
             severity="high",
             message="Test fault",
-            timestamp="2025-01-01T00:00:00Z",
+            timestamp="00:00:00",
         )
         alert_id = self.db.create(a)
 
@@ -67,7 +79,7 @@ class TestDatabase(unittest.TestCase):
                 fault_code=f"F00{i}",
                 severity="medium",
                 message=f"Test fault {i}",
-                timestamp=f"2025-01-01T00:00:0{i}Z",
+                timestamp=f"00:00:0{i}",
             )
             ids.append(self.db.create(a))
 
