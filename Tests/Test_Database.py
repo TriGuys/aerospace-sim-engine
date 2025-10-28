@@ -29,8 +29,8 @@ class TestDatabase(unittest.TestCase):
             message="Test fault",
             timestamp="00:00:00",
         )
-        alert_id = self.db.create(a)
-        retrieved = self.db.get(alert_id)
+        alert = self.db.create(a)
+        retrieved = self.db.get(alert.alert_id)
 
         self.assertIsNotNone(retrieved)
         self.assertEqual(retrieved.sensor_id, a.sensor_id)
@@ -64,11 +64,11 @@ class TestDatabase(unittest.TestCase):
             message="Test fault",
             timestamp="00:00:00",
         )
-        alert_id = self.db.create(a)
+        alert = self.db.create(a)
 
-        self.assertTrue(self.db.delete(alert_id))
-        self.assertIsNone(self.db.get(alert_id))
-        self.assertFalse(self.db.delete(alert_id))  # Already deleted
+        self.assertTrue(self.db.delete(alert.alert_id))
+        self.assertIsNone(self.db.get(alert.alert_id))
+        self.assertFalse(self.db.delete(alert.alert_id))  # Already deleted
 
     def test_get_all_descending(self):
         """Test retrieving all alerts in descending order."""
@@ -81,7 +81,8 @@ class TestDatabase(unittest.TestCase):
                 message=f"Test fault {i}",
                 timestamp=f"00:00:0{i}",
             )
-            ids.append(self.db.create(a))
+            created = self.db.create(a)
+            ids.append(created.alert_id)
 
         all_alerts = self.db.get_all()
         self.assertEqual([al.alert_id for al in all_alerts], sorted(ids, reverse=True))
