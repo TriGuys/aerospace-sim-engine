@@ -33,7 +33,7 @@ class TestAlertModule(unittest.TestCase):
             fault_code="F001",
             severity="high",
             message="Test fault",
-            timestamp="2025-01-01T00:00:00Z",
+            timestamp="12:00:00",
         )
 
         # Check that the created alert is stored in the module
@@ -46,6 +46,17 @@ class TestAlertModule(unittest.TestCase):
         self.assertEqual(len(refreshed), 1)
         self.assertEqual(refreshed[0].alert_id, self.mod.alerts[0].alert_id)
 
+    def test_create_alert_invalid_timestamp(self):
+        """Test creating an alert with an invalid timestamp fails alert creation."""
+        with self.assertRaises(ValueError):
+            self.mod.create_alert(
+                sensor_id="sensor_invalid",
+                fault_code="F999",
+                severity="low",
+                message="Invalid timestamp test",
+                timestamp="2025-01-01",
+            )
+
     def test_get_alert(self):
         """Test retrieving an alert by ID."""
         alert_id = self.db.create(AlertCreation(
@@ -53,7 +64,7 @@ class TestAlertModule(unittest.TestCase):
             fault_code="F002",
             severity="medium",
             message="Another test fault",
-            timestamp="2025-01-02T00:00:00Z",
+            timestamp="00:00:01",
         ))
 
         # Check that the alert is stored in the module
@@ -68,7 +79,7 @@ class TestAlertModule(unittest.TestCase):
             fault_code="F003",
             severity="low",
             message="Delete test fault",
-            timestamp="2025-01-03T00:00:00Z",
+            timestamp="00:00:02",
         )
 
         # Delete the alert
