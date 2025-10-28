@@ -43,7 +43,7 @@ class TestSensorIntegration(unittest.TestCase):
     def test_read_csv_success_sets_data_and_cleans(self):
         """Test that read_csv successfully reads a CSV file and sets the data."""
         df = pd.DataFrame({
-            "timestamp": ["2025-01-01T00:00:00Z", "2025-01-01T01:00:00Z", "2025-01-01T02:00:00Z"],
+            "timestamp": ["00:00:00", "01:00:00", "02:00:00"],
             "sensor_id": ["A1", "A2", " "],  # bad row
             "sensor_type": ["temp", "temp", "temp"],
             "value": [10, 20, 30],
@@ -58,6 +58,35 @@ class TestSensorIntegration(unittest.TestCase):
         # Should drop last bad row
         self.assertEqual(len(data), 2)
         self.assertNotIn(" ", data["sensor_id"].values)
+
+    def test_validate_data_missing_columns_raises(self):
+        """Test that validate_data raises an error if required columns are missing."""
+        df = pd.DataFrame({
+            "timestamp": ["00:00:00"],
+            "sensor_id": ["A1"],
+            "sensor_type": ["temp"],
+            "value": [10],
+            # "unit" column is missing
+        })
+        path = self._csv_path("missing_columns.csv")
+        self._write_df(df, path)
+        with self.assertRaises(ValueError):
+            self.si.read_csv(path)
+
+    def test_validate_data_unexpected_columns_raises(self):
+        """Test that validate_data raises an error if unexpected columns are present."""
+        df = pd.DataFrame({
+            "timestamp": ["00:00:00"],
+            "sensor_id": ["A1"],
+            "sensor_type": ["temp"],
+            "value": [10],
+            "unit": ["C"],
+            "extra_column": ["unexpected"],  # Unexpected column should trigger ValueError
+        })
+        path = self._csv_path("unexpected_columns.csv")
+        self._write_df(df, path)
+        with self.assertRaises(ValueError):
+            self.si.read_csv(path)
 
 if __name__ == "__main__":
     unittest.main()
