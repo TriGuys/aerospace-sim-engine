@@ -59,7 +59,7 @@ class TestAlertModule(unittest.TestCase):
 
     def test_get_alert(self):
         """Test retrieving an alert by ID."""
-        alert_id = self.db.create(AlertCreation(
+        created = self.db.create(AlertCreation(
             sensor_id="sensor_2",
             fault_code="F002",
             severity="medium",
@@ -69,7 +69,7 @@ class TestAlertModule(unittest.TestCase):
 
         # Check that the alert is stored in the module
         alerts = self.mod.get_all_alerts()
-        self.assertTrue(any(a.alert_id == alert_id for a in alerts))
+        self.assertTrue(any(a.alert_id == created.alert_id for a in alerts))
         self.assertEqual(self.mod.alerts, alerts)
 
     def test_delete_alert(self):
@@ -84,7 +84,7 @@ class TestAlertModule(unittest.TestCase):
 
         # Delete the alert
         self.assertTrue(self.mod.delete_alert(created.alert_id))
-        self.assertFalse(any(a.alert_id == created.alert_id for a in self.mod.alerts()))
+        self.assertFalse(any(a.alert_id == created.alert_id for a in self.mod.alerts))
 
         # Attempting to delete again should return False
         self.assertFalse(self.mod.delete_alert(created.alert_id))
