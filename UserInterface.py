@@ -162,15 +162,20 @@ class UserInterface():
 
         style = ttk.Style()
         style.theme_use("default")
-        style.configure("Treeview", 
+        style.configure(
+                    "Treeview", 
                     background="white",
                     fieldbackground="white",
                     rowheight=30,
-                    font=("Arial", 10))
+                    font=("Arial", 10),
+                    bordercolor="#000000",
+                    borderwidth=1,
+                    relief="solid"
+        )
         style.map("Treeview", background=[("selected", "#a7c7e7")])
 
         columns = ("Alert ID", "Sensor ID", "Fault Code", "Severity", "Message", "Timestamp", "Status", "Actions")
-        self.table = ttk.Treeview(frame, columns=columns, show="headings", height=10)
+        self.table = ttk.Treeview(frame, columns=columns, show="headings", height=10)  
 
         for col in columns:
             self.table.heading(col, text=col)
