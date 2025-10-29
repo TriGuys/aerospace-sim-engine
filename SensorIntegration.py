@@ -10,10 +10,6 @@ class SensorIntegration():
     def __init__(self) -> None:
         self.data: pd.DataFrame | None = None
 
-    def pass_sensor_data(self) -> None:
-        """Placeholder method for passing sensor data to fault detection module."""
-        pass
-
     def read_csv(self, file_path: str | os.PathLike[str]) -> pd.DataFrame:
         """
         Load and preprocess a CSV file containing sensor readings.
