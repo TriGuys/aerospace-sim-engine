@@ -2,7 +2,7 @@ import re
 import sqlite3
 from pathlib import Path
 from typing import Optional
-from Abstractions import Alert, AlertCreation
+from Abstractions import Alert, AlertCreation, Status
 
 class AlertDatabase:
 
@@ -41,6 +41,7 @@ class AlertDatabase:
             raise ValueError("timestamp must be HH:MM:SS")
 
     def create(self, alert: AlertCreation) -> Alert:
+        """Insert a new alert into the database and return an Alert object."""
         self._validate_timestamp(alert.timestamp)
         try:
             row = self._con.execute(
@@ -67,7 +68,11 @@ class AlertDatabase:
         ).fetchone()
         if row is None:
             return None
-        return Alert(**dict(row))
+        
+        # Convert status string back to status enum.
+        data = dict(row)
+        data["status"] = Status(data["status"])
+        return Alert(**data)
     
     def get_all(self):
         rows = self._con.execute(
@@ -80,6 +85,7 @@ class AlertDatabase:
         return [Alert(**dict(r)) for r in rows]
 
     def delete(self, alert_id: int) -> bool:
+        """Delete an alert by ID."""
         try:
             cur = self._con.execute(
                 "DELETE FROM alerts WHERE alert_id = ?",
@@ -89,13 +95,13 @@ class AlertDatabase:
         except sqlite3.OperationalError as e:
             raise RuntimeError(f"Delete failed: {e}")
         
-    def update_status(self, alert_id: int, status: str) -> bool:
+    def update_status(self, alert_id: int, status: Status) -> bool:
         """Update the status (Active/Resolved) of an alert."""
         try:
             with self._connect() as con:
                 cur = con.execute(
                     "UPDATE alerts SET status = ? WHERE alert_id = ?",
-                    (status, alert_id)
+                    (status.value, alert_id)
                 )
                 return cur.rowcount > 0
         except sqlite3.OperationalError as e:

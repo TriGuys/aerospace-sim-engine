@@ -7,8 +7,8 @@ class Severity(Enum):
     Critical = 3
 
 class Status(Enum):
-    ACTIVE = 1
-    RESOLVED = 2
+    ACTIVE = "Active"
+    RESOLVED = "Resolved"
 
 @dataclass(frozen=True)
 class Fault:
@@ -35,4 +35,4 @@ class Alert:
     severity: str
     message: str
     timestamp: str
-    status: str = "Active"
+    status: Status = Status.ACTIVE
