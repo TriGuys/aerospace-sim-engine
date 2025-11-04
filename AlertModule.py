@@ -1,6 +1,6 @@
 import logging
 from typing import List
-from Abstractions import AlertCreation, Alert
+from Abstractions import AlertCreation, Alert, Status
 from Database import AlertDatabase
 
 # Configure logging for module.
@@ -50,7 +50,7 @@ class AlertModule:
     def resolve_alert(self, alert_id: int) -> bool:
         """Mark an alert as resolved in the database."""
         try:
-            updated = self.database.update_status(alert_id, "Resolved")
+            updated = self.database.update_status(alert_id, Status.RESOLVED)
             if updated:
                 logging.info("Marked alert ID %d as resolved.", alert_id)
                 return True
@@ -64,7 +64,7 @@ class AlertModule:
     def unresolve_alert(self, alert_id: int) -> bool:
         """Mark a resolved alert as active again in the database."""
         try:
-            updated = self.database.update_status(alert_id, "Active")
+            updated = self.database.update_status(alert_id, Status.ACTIVE)
             if updated:
                 logging.info("Reactivated alert ID %d (set to Active).", alert_id)
                 return True

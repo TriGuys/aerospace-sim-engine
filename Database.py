@@ -2,7 +2,7 @@ import re
 import sqlite3
 from pathlib import Path
 from typing import Optional
-from Abstractions import Alert, AlertCreation
+from Abstractions import Alert, AlertCreation, Status
 
 class AlertDatabase:
 
@@ -39,37 +39,50 @@ class AlertDatabase:
             raise ValueError("timestamp must be HH:MM:SS")
 
     def create(self, alert: AlertCreation) -> Alert:
+        """Insert a new alert into the database and return an Alert object."""
         self._validate_timestamp(alert.timestamp)
         try:
             with self._connect() as con:
                 row = con.execute(
                     """
-                    INSERT INTO alerts(sensor_id,fault_code,severity,message,timestamp) 
-                    VALUES (?,?,?,?,?)
-                    RETURNING alert_id, sensor_id, fault_code, severity, message, timestamp
+                    INSERT INTO alerts(sensor_id, fault_code, severity, message, timestamp, status) 
+                    VALUES (?,?,?,?,?,?)
+                    RETURNING alert_id, sensor_id, fault_code, severity, message, timestamp, status
                     """,
                     (
                     alert.sensor_id,
                     alert.fault_code,
                     alert.severity,
                     alert.message,
-                    alert.timestamp
+                    alert.timestamp,
+                    Status.ACTIVE.value
                     ),
                 ).fetchone()
-                return Alert(**dict(row))
+
+                # Convert the status string from the DB back to enum
+                data = dict(row)
+                data["status"] = Status(data["status"])
+                return Alert(**data)
+            
         except sqlite3.IntegrityError as e:
             raise ValueError(f"Invalid alert data: {e}")
 
     def get(self, alert_id: int) -> Optional[Alert]:
+        """Retrieve a single alert by ID."""
         with self._connect() as con:
             row = con.execute(
-                "SELECT alert_id, sensor_id, fault_code, severity, message, timestamp, FROM alerts WHERE alert_id = ?", (alert_id,)
+                "SELECT alert_id, sensor_id, fault_code, severity, message, timestamp, status FROM alerts WHERE alert_id = ?", (alert_id,)
             ).fetchone()
         if row is None:
             return None
-        return Alert(**dict(row))
+        
+        # Convert status string back to status enum.
+        data = dict(row)
+        data["status"] = Status(data["status"])
+        return Alert(**data)
     
     def get_all(self):
+        """Retrieve all alerts from the database."""
         with self._connect() as con:
             rows = con.execute(
                 """
@@ -78,9 +91,17 @@ class AlertDatabase:
                 ORDER BY alert_id ASC;
                 """
             ).fetchall()
-        return [Alert(**dict(r)) for r in rows]
+
+        # Convert status string back to status enum for each record.
+        alerts = []
+        for r in rows:
+            data = dict(r)
+            data["status"] = Status(data["status"])
+            alerts.append(Alert(**data))
+        return alerts
 
     def delete(self, alert_id: int) -> bool:
+        """Delete an alert by ID."""
         try:
             with self._connect() as con:
                 cur = con.execute(
@@ -91,13 +112,13 @@ class AlertDatabase:
         except sqlite3.OperationalError as e:
             raise RuntimeError(f"Delete failed: {e}")
         
-    def update_status(self, alert_id: int, status: str) -> bool:
+    def update_status(self, alert_id: int, status: Status) -> bool:
         """Update the status (Active/Resolved) of an alert."""
         try:
             with self._connect() as con:
                 cur = con.execute(
                     "UPDATE alerts SET status = ? WHERE alert_id = ?",
-                    (status, alert_id)
+                    (status.value, alert_id)
                 )
                 return cur.rowcount > 0
         except sqlite3.OperationalError as e:
