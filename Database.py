@@ -26,7 +26,8 @@ class AlertDatabase:
                   fault_code      TEXT    NOT NULL,
                   severity        TEXT    NOT NULL,
                   message         TEXT    NOT NULL,
-                  timestamp       TEXT    NOT NULL CHECK (timestamp GLOB '??:??:??')
+                  timestamp       TEXT    NOT NULL CHECK (timestamp GLOB '??:??:??'),
+                  status          TEXT    NOT NULL DEFAULT 'Active'
                 )
                 """
             )
@@ -62,7 +63,7 @@ class AlertDatabase:
     def get(self, alert_id: int) -> Optional[Alert]:
         with self._connect() as con:
             row = con.execute(
-                "SELECT alert_id, sensor_id, fault_code, severity, message, timestamp FROM alerts WHERE alert_id = ?", (alert_id,)
+                "SELECT alert_id, sensor_id, fault_code, severity, message, timestamp, FROM alerts WHERE alert_id = ?", (alert_id,)
             ).fetchone()
         if row is None:
             return None
@@ -72,9 +73,9 @@ class AlertDatabase:
         with self._connect() as con:
             rows = con.execute(
                 """
-                SELECT alert_id, sensor_id, fault_code, severity, message, timestamp
+                SELECT alert_id, sensor_id, fault_code, severity, message, timestamp, status
                 FROM alerts
-                ORDER BY alert_id ASC
+                ORDER BY alert_id ASC;
                 """
             ).fetchall()
         return [Alert(**dict(r)) for r in rows]
@@ -89,3 +90,15 @@ class AlertDatabase:
                 return cur.rowcount > 0
         except sqlite3.OperationalError as e:
             raise RuntimeError(f"Delete failed: {e}")
+        
+    def update_status(self, alert_id: int, status: str) -> bool:
+        """Update the status (Active/Resolved) of an alert."""
+        try:
+            with self._connect() as con:
+                cur = con.execute(
+                    "UPDATE alerts SET status = ? WHERE alert_id = ?",
+                    (status, alert_id)
+                )
+                return cur.rowcount > 0
+        except sqlite3.OperationalError as e:
+            raise RuntimeError(f"Failed to update alert status: {e}")

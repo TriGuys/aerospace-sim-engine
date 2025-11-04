@@ -35,3 +35,4 @@ class Alert:
     severity: str
     message: str
     timestamp: str
+    status: str = "Active"
