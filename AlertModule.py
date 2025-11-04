@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional
+from typing import List
 from Abstractions import AlertCreation, Alert
 from Database import AlertDatabase
 
@@ -47,9 +47,33 @@ class AlertModule:
             logging.error("Error retrieving alerts from database: %s", e)
             raise
     
-    def resolve_alert(self, alert_id: int) -> None:
-        """Mark an alert as resolved (Needs to be expanded to mark in database)."""
-        pass
+    def resolve_alert(self, alert_id: int) -> bool:
+        """Mark an alert as resolved in the database."""
+        try:
+            updated = self.database.update_status(alert_id, "Resolved")
+            if updated:
+                logging.info("Marked alert ID %d as resolved.", alert_id)
+                return True
+            else:
+                logging.warning("Attempted to resolve alert ID %d but it was not found.", alert_id)
+                return False
+        except Exception as e:
+            logging.error("Failed to resolve alert ID %d: %s", alert_id, e)
+            raise
+
+    def unresolve_alert(self, alert_id: int) -> bool:
+        """Mark a resolved alert as active again in the database."""
+        try:
+            updated = self.database.update_status(alert_id, "Active")
+            if updated:
+                logging.info("Reactivated alert ID %d (set to Active).", alert_id)
+                return True
+            else:
+                logging.warning("Attempted to reactivate alert ID %d but it was not found.", alert_id)
+                return False
+        except Exception as e:
+            logging.error("Failed to reactivate alert ID %d: %s", alert_id, e)
+            raise
 
     def delete_alert(self, alert_id: int) -> bool:
         """Delete an alert from the database."""

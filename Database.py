@@ -88,3 +88,15 @@ class AlertDatabase:
             return cur.rowcount > 0
         except sqlite3.OperationalError as e:
             raise RuntimeError(f"Delete failed: {e}")
+        
+    def update_status(self, alert_id: int, status: str) -> bool:
+        """Update the status (Active/Resolved) of an alert."""
+        try:
+            with self._connect() as con:
+                cur = con.execute(
+                    "UPDATE alerts SET status = ? WHERE alert_id = ?",
+                    (status, alert_id)
+                )
+                return cur.rowcount > 0
+        except sqlite3.OperationalError as e:
+            raise RuntimeError(f"Failed to update alert status: {e}")
