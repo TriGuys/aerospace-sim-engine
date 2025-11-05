@@ -28,7 +28,8 @@ class AlertDatabase:
                 fault_code      TEXT    NOT NULL,
                 severity        TEXT    NOT NULL,
                 message         TEXT    NOT NULL,
-                timestamp       TEXT    NOT NULL CHECK (timestamp GLOB '??:??:??')
+                timestamp       TEXT    NOT NULL CHECK (timestamp GLOB '??:??:??'),
+                status          TEXT    NOT NULL DEFAULT 'Active'
             )
             """
         )
@@ -46,23 +47,30 @@ class AlertDatabase:
         try:
             row = self._con.execute(
                 """
-                INSERT INTO alerts(sensor_id,fault_code,severity,message,timestamp) 
-                VALUES (?,?,?,?,?)
-                RETURNING alert_id, sensor_id, fault_code, severity, message, timestamp
+                INSERT INTO alerts(sensor_id, fault_code, severity, message, timestamp, status) 
+                VALUES (?,?,?,?,?,?)
+                RETURNING alert_id, sensor_id, fault_code, severity, message, timestamp, status
                 """,
                 (
                 alert.sensor_id,
                 alert.fault_code,
                 alert.severity,
                 alert.message,
-                alert.timestamp
+                alert.timestamp,
+                Status.ACTIVE.value
                 ),
             ).fetchone()
-            return Alert(**dict(row))
+
+            # Convert the status string from the DB back to enum
+            data = dict(row)
+            data["status"] = Status(data["status"])
+            return Alert(**data)
+            
         except sqlite3.IntegrityError as e:
             raise ValueError(f"Invalid alert data: {e}")
 
     def get(self, alert_id: int) -> Optional[Alert]:
+        """Retrieve a single alert by ID."""
         row = self._con.execute(
             "SELECT alert_id, sensor_id, fault_code, severity, message, timestamp, status FROM alerts WHERE alert_id = ?", (alert_id,)
         ).fetchone()
@@ -75,14 +83,22 @@ class AlertDatabase:
         return Alert(**data)
     
     def get_all(self):
+        """Retrieve all alerts from the database."""
         rows = self._con.execute(
             """
-            SELECT alert_id, sensor_id, fault_code, severity, message, timestamp
+            SELECT alert_id, sensor_id, fault_code, severity, message, timestamp, status
             FROM alerts
-            ORDER BY alert_id ASC
+            ORDER BY alert_id ASC;
             """
         ).fetchall()
-        return [Alert(**dict(r)) for r in rows]
+
+        # Convert status string back to status enum for each record.
+        alerts = []
+        for r in rows:
+            data = dict(r)
+            data["status"] = Status(data["status"])
+            alerts.append(Alert(**data))
+        return alerts
 
     def delete(self, alert_id: int) -> bool:
         """Delete an alert by ID."""
