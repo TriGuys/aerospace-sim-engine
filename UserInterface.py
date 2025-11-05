@@ -1,7 +1,10 @@
 import os
 import tkinter as tk
+import logging
 from tkinter import ttk, filedialog, messagebox
 from PIL import Image, ImageTk
+from FaultDetection import FaultDetection
+from SensorIntegration import SensorIntegration
 
 class UserInterface():
     """Tkinter based user interface for the HeMoSys Aircraft Health Monitoring System."""
@@ -10,6 +13,8 @@ class UserInterface():
         """Initialise the main application window and grid layout."""
         self.root = root
         self.alert_module = alert_module
+        self.fault_detection = FaultDetection()
+        self.sensor_integration = SensorIntegration()
         self.root.title("HeMoSys - Aircraft Health Monitoring System")
         self.root.state('zoomed')
         self.root.configure(bg="white")
@@ -46,7 +51,8 @@ class UserInterface():
             "All Alerts": self.show_all_alerts,
             "Critical Alerts": self.show_critical_alerts,
             "Moderate Alerts": self.show_moderate_alerts,
-            "Advisory Alerts": self.show_advisory_alerts
+            "Advisory Alerts": self.show_advisory_alerts,
+            "Resolved Alerts": self.show_resolved_alerts
         }
 
         for text, command in button_actions.items():
@@ -102,9 +108,47 @@ class UserInterface():
             )
             return
     
-        # Placeholder for when file_path will be sent to sensor integration module.
-        if file_path:
-            messagebox.showinfo("File Uploaded", f"Loaded: {os.path.basename(file_path)}")
+        try:
+            # Load CSV into a pandas DataFrame.
+            df = self.sensor_integration.read_csv(file_path)
+
+            # Detect faults in the DataFrame.
+            rules_path = os.path.join(os.path.dirname(__file__), "fault_rules.json")
+            self.fault_detection.loadRules(rules_path)
+
+            faults = self.fault_detection.detectFromBatch(df)
+
+            # Create alerts from each fault.
+            for fault in faults:
+                self.alert_module.create_alert (
+                    sensor_id=fault.sensor_id,
+                    fault_code=fault.fault_id,
+                    severity=fault.severity.name,
+                    message=fault.description,
+                    timestamp=fault.timestamp
+                )
+                
+            # Reload the table with the latest alerts.
+            self.all_alerts = [
+                (
+                    alert.alert_id,
+                    alert.sensor_id,
+                    alert.fault_code,
+                    alert.severity,
+                    alert.message,
+                    alert.timestamp,
+                    "Active",
+                    "✅    ❌"
+                )
+                for alert in self.alert_module.get_all_alerts()
+            ]
+
+            self.display_alerts(self.all_alerts)
+            logging.info(f"Raised {len(faults)} alert(s) from {file_path}")
+            messagebox.showinfo("Success", f"Processed and raised {len(faults)} alert(s) from {file_path}")
+
+        except Exception as e:
+            messagebox.showerror("Processing Error", f"An error occurred while processing the file:\n{e}")
 
     def create_alert(self) -> None:
         """Placeholder for alert creation logic."""
@@ -119,19 +163,37 @@ class UserInterface():
 
         style = ttk.Style()
         style.theme_use("default")
-        style.configure("Treeview", 
+        style.configure(
+                    "Treeview", 
                     background="white",
                     fieldbackground="white",
                     rowheight=30,
-                    font=("Arial", 10))
+                    font=("Arial", 10),
+                    bordercolor="#000000",
+                    borderwidth=1,
+                    relief="solid"
+        )
         style.map("Treeview", background=[("selected", "#a7c7e7")])
 
         columns = ("Alert ID", "Sensor ID", "Fault Code", "Severity", "Message", "Timestamp", "Status", "Actions")
-        self.table = ttk.Treeview(frame, columns=columns, show="headings", height=10)
+        self.table = ttk.Treeview(frame, columns=columns, show="headings", height=10)  
 
         for col in columns:
             self.table.heading(col, text=col)
-            width = 80 if col in ("Alert ID", "Sensor ID", "Status") else 120
+
+            if col == "Alert ID":
+                width = 60
+            elif col  == "Status":
+                width = 90
+            elif col == "Fault Code":
+                width = 180
+            elif col in ("Severity", "Timestamp", "Actions"):
+                width = 100
+            elif col == "Message":
+                width = 260
+            else:
+                width = 120
+
             self.table.column(col, width=width, anchor=tk.CENTER)
 
         # Define tag styles for severity levels.
@@ -178,9 +240,14 @@ class UserInterface():
         for item in self.table.get_children():
             self.table.delete(item)
 
+        # Insert new rows with proper color tags
         for row in alerts:
-            severity = row[3].lower()
-            self.table.insert("", tk.END, values=row, tags=(severity,))
+            severity = row[3].lower() if len(row) > 3 else "advisory"
+            status = row[6].lower() if len(row) > 6 else "active"
+
+            # Use resolved colour if status is resolved
+            tag = "resolved" if status == "resolved" else severity
+            self.table.insert("", tk.END, values=row, tags=(tag,))
 
     def show_all_alerts(self) -> None:
         """Display all alerts."""
@@ -200,6 +267,11 @@ class UserInterface():
         """Display only advisory alerts."""
         advisory_alerts = [a for a in self.all_alerts if a[3].lower() == "advisory"]
         self.display_alerts(advisory_alerts)
+
+    def show_resolved_alerts(self) -> None:
+        """Display only resolved alerts."""
+        resolved_alerts = [a for a in self.all_alerts if a[6].lower() == "resolved"]
+        self.display_alerts(resolved_alerts)
 
     def on_table_click(self, event: tk.Event) -> None:
         """Identify and handle user clicks in the alert table."""
@@ -227,34 +299,49 @@ class UserInterface():
                 self.delete_alert(row_id)
 
     def resolve_alert(self, row_id: str) -> None:
-        """Mark a selected alert as resolved."""
+        """Toggle alert between active and resolved."""
         values = list(self.table.item(row_id, "values"))
         if not values:
             return
         
         alert_id = values[0]
+        current_status = values[6]
 
         # Check that alert_id is not empty or invalid.
         if not alert_id or str(alert_id).strip() == "":
-            messagebox.showwarning("Invalid Alert", "Cannot resolve an alert without a valid ID.")
-            return 
-        
-        if self.alert_module and alert_id:
-            try:
+            messagebox.showwarning("Invalid Alert", "Cannot modify an alert without a valid ID.")
+            return   
+
+        try:
+            # Toggle status in the database
+            if current_status == "Active":
                 self.alert_module.resolve_alert(int(alert_id))
-            except ValueError:
-                messagebox.showerror("Error", f"Invalid alert ID: {alert_id}")
-                return
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to resolve alert: {e}")
-
-        values[6] = "Resolved"
-        values[7] = "☑    ❌"
-        self.table.item(row_id, values=values)
-        self.table.item(row_id, tags=("resolved",))
-
-        alert_id = values[0] if values[0] else "(No ID)"
-        messagebox.showinfo("Alert Resolved", f"Alert {alert_id} marked as resolved.")
+                values[6] = "Resolved"
+                values[7] = "☑    ❌"
+                self.table.item(row_id, values=values, tags=("resolved",))
+                messagebox.showinfo("Alert Resolved", f"Alert {alert_id} marked as resolved.")
+            else:
+            # Mark as active again
+                self.alert_module.unresolve_alert(int(alert_id))
+                values[6] = "Active"
+                values[7] = "✅    ❌"
+                severity_tag = values[3].lower() if len(values) > 3 else "active"
+                self.table.item(row_id, values=values, tags=(severity_tag,))
+                messagebox.showinfo("Alert Reactivated", f"Alert {alert_id} reactivated.")
+        
+        except ValueError:
+            messagebox.showerror("Error", f"Invalid alert ID: {alert_id}")
+            return
+    
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to update alert: {e}")
+            return
+        
+         # Update self.all_alerts so filters reflect the new alert status
+        self.all_alerts = [
+            tuple(values) if str(a[0]) == str(alert_id) else a
+            for a in self.all_alerts
+        ]
 
     def delete_alert(self, row_id: str) -> None:
         """Delete a selected alert after confirmation from the user."""
