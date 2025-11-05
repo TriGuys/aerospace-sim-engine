@@ -20,6 +20,7 @@ class TestAlertModule(unittest.TestCase):
 
     def tearDown(self):
         """Clean up the temporary directory."""
+        self.db.close()
         self.tmpdir.cleanup()
 
     def test_initial_state_no_alerts(self):

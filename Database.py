@@ -36,9 +36,9 @@ class AlertDatabase:
 
     @staticmethod # doesn't require the class, just simply a utility function.
     def _validate_timestamp(ts: str) -> None:
-        hour_minute_second = re.compile(r"^\d{2}:\d{2}:\d{2}$")
+        hour_minute_second = re.compile(r"^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$")
         if not hour_minute_second.match(ts):
-            raise ValueError("timestamp must be HH:MM:SS")
+            raise ValueError("timestamp must be valid 24-hour HH:MM:SS (00–23:59:59)")
 
     def create(self, alert: AlertCreation) -> Alert:
         """Insert a new alert into the database and return an Alert object."""
@@ -64,7 +64,7 @@ class AlertDatabase:
 
     def get(self, alert_id: int) -> Optional[Alert]:
         row = self._con.execute(
-            "SELECT alert_id, sensor_id, fault_code, severity, message, timestamp FROM alerts WHERE alert_id = ?", (alert_id,)
+            "SELECT alert_id, sensor_id, fault_code, severity, message, timestamp, status FROM alerts WHERE alert_id = ?", (alert_id,)
         ).fetchone()
         if row is None:
             return None
