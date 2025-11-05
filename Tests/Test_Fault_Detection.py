@@ -25,7 +25,7 @@ class TestFaultDetection(unittest.TestCase):
 
     def test_rules_loaded(self):
         """Test that fault detection rules are loaded correctly."""
-        self.assertGreater(len(self.fd.detectionRules), 7)
+        self.assertEqual(len(self.fd.detectionRules), 7)
 
     def test_detect_from_batch_triggers_fault(self):
         """Test that detect_from_batch identifies faults in sensor data."""
@@ -58,7 +58,7 @@ class TestFaultDetection(unittest.TestCase):
 
     def test_detect_from_batch_empty_data(self):
         """Test that detect_from_batch handles empty data correctly."""
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(TypeError, r"Expected a pandas DataFrame"):
             self.fd.detectFromBatch({"not": "a dataframe"})
 
 if __name__ == '__main__':
