@@ -79,7 +79,7 @@ class AlertDatabase:
             """
             SELECT alert_id, sensor_id, fault_code, severity, message, timestamp
             FROM alerts
-            ORDER BY alert_id DESC
+            ORDER BY alert_id ASC
             """
         ).fetchall()
         return [Alert(**dict(r)) for r in rows]
@@ -98,11 +98,10 @@ class AlertDatabase:
     def update_status(self, alert_id: int, status: Status) -> bool:
         """Update the status (Active/Resolved) of an alert."""
         try:
-            with self._connect() as con:
-                cur = con.execute(
-                    "UPDATE alerts SET status = ? WHERE alert_id = ?",
-                    (status.value, alert_id)
-                )
-                return cur.rowcount > 0
+            cur = self._con.execute(
+                "UPDATE alerts SET status = ? WHERE alert_id = ?",
+                (status.value, alert_id)
+            )
+            return cur.rowcount > 0
         except sqlite3.OperationalError as e:
             raise RuntimeError(f"Failed to update alert status: {e}")
