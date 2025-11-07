@@ -10,7 +10,13 @@ from Abstractions import Fault, Severity, Status
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 class FaultRule(ABC):
-    """Abstract base class for a fault detection rule."""
+    """Abstract base class for a fault detection rule.
+    
+    Defines a standard interface for evaluating sensor values against
+    fault thresholds. Subclasses then implement specific comparison logic
+    (e.g. GreaterThanRule, LessThanRule, EqualRule).
+    
+    """
 
     def __init__(self, sensor_id: str, threshold: float, fault_code: str, severity: str, message: str):
         self.sensor_id = sensor_id
@@ -48,10 +54,10 @@ class FaultDetection():
     
     def loadRules(self, file_path: str) -> None:
         """
-        Load fault detection rules from a JSON file and instantiate rule objects.
+        Load fault detection rules from a JSON file and create rule objects.
 
-        Args:
-            file_path(str): Path to the JSON file containing the fault detection rules. 
+        Each JSON rule is converted into the appropriate FaultRule subclass based on its condition (>, <, =),
+        allowing each rule type to evaluate its logic independently through polymorphism.
         """
         with open(Path(file_path), "r") as f:
             rules_data = json.load(f)
@@ -90,8 +96,11 @@ class FaultDetection():
 
     def detectFaults(self, sensorData: Dict[str, Any]) -> List[Fault]:
         """
-        Apply fault detection rules to a single sensor record.
+        Apply all loaded FaultRule objects to a single sensor record.
 
+        Each rule evaluates its own condition via its its_triggered() method, demonstrating polymorphism.
+        When a rule's condition is satisfied, a corresponding Fault object is created and returned.
+        
         Note:
             This method is called internally by detectFromBatch(), 
             which applies detection to an entire pandas DataFrame.
@@ -101,13 +110,13 @@ class FaultDetection():
                 A dictionary representing one sensor data record, expected to include:
                 - "timestamp" (str): The time the reading was taken.
                 - "sensor_id" (str): The unique identifier of the sensor.
-                - "sensor_type" (str): The category or measurement type (e.g. Temperature, Pressure).
+                - "sensor_type" (str): The measurement type (e.g. Temperature, Pressure).
                 - "value" (float or int): The numeric reading from the sensor.
-                - "unit" (str): The unit of measurement for the sensor value (e.g., "°C", "psi", "V").
+                - "unit" (str): The unit of measurement (e.g., "°C", "psi", "V").
 
         Returns:
-            list[Fault]: List of detected fault objects for the sensor. 
-            Returns an empty list if none of the fault rules were triggered.
+            list[Fault]: A list of detected fault objects for the sensor. 
+            Returns an empty list if no rules are triggered.
         """
 
         detected_faults: List[Fault] = []
