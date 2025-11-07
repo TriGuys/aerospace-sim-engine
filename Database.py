@@ -40,6 +40,13 @@ class AlertDatabase:
         hour_minute_second = re.compile(r"^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$")
         if not hour_minute_second.match(ts):
             raise ValueError("timestamp must be valid 24-hour HH:MM:SS (00–23:59:59)")
+        
+    @staticmethod
+    def _to_alert(row: sqlite3.Row) -> Alert:
+        """Convert the status string from the DB back to enum"""
+        data = dict(row)
+        data["status"] = Status(data["status"])
+        return Alert(**data)
 
     def create(self, alert: AlertCreation) -> Alert:
         """Insert a new alert into the database and return an Alert object."""
@@ -62,11 +69,7 @@ class AlertDatabase:
             ).fetchone()
 
             self._con.commit()
-
-            # Convert the status string from the DB back to enum
-            data = dict(row)
-            data["status"] = Status(data["status"])
-            return Alert(**data)
+            return self._to_alert(row)
             
         except sqlite3.IntegrityError as e:
             raise ValueError(f"Invalid alert data: {e}")
@@ -79,10 +82,7 @@ class AlertDatabase:
         if row is None:
             return None
         
-        # Convert status string back to status enum.
-        data = dict(row)
-        data["status"] = Status(data["status"])
-        return Alert(**data)
+        return self._to_alert(row)
     
     def get_all(self):
         """Retrieve all alerts from the database."""
@@ -97,9 +97,7 @@ class AlertDatabase:
         # Convert status string back to status enum for each record.
         alerts = []
         for r in rows:
-            data = dict(r)
-            data["status"] = Status(data["status"])
-            alerts.append(Alert(**data))
+            alerts.append(self._to_alert(r))
         return alerts
 
     def delete(self, alert_id: int) -> bool:
