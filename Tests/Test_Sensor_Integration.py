@@ -3,33 +3,16 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 import unittest
 import pandas as pd
-from pathlib import Path
-import tempfile
 
+from Test_Base import TestBase
 from SensorIntegration import SensorIntegration
 
-class TestSensorIntegration(unittest.TestCase):
+class TestSensorIntegration(TestBase):
 
     def setUp(self):
-        """Create a temporary directory for test files."""
-        self.tmpdir = tempfile.TemporaryDirectory()
-        self.tmp_path = Path(self.tmpdir.name)
+        super().setUp()
         self.si = SensorIntegration()
 
-    def tearDown(self):
-        """Clean up the temporary directory."""
-        self.tmpdir.cleanup()
-
-    # Helpers
-    def _csv_path(self, name: str) -> Path:
-        """Get a Path in the temporary directory for a CSV file."""
-        return self.tmp_path / name
-    
-    def _write_df(self, df: pd.DataFrame, path: Path) -> None:
-        """Write a DataFrame to CSV at the given path."""
-        df.to_csv(path, index=False)
-
-    # Tests
     def test_get_sensor_data_before_load_raises(self):
         """Test that get_sensor_data raises an error before CSV is loaded."""
         with self.assertRaises(ValueError):
@@ -38,7 +21,7 @@ class TestSensorIntegration(unittest.TestCase):
     def test_read_csv_file_not_found_raises(self):
         """Test that read_csv raises an error if the file is not found."""
         with self.assertRaises(FileNotFoundError):
-            self.si.read_csv(self._csv_path("non_existent_file.csv"))
+            self.si.read_csv(self.tmp_path / "non_existent_file.csv")
 
     def test_read_csv_success_sets_data_and_cleans(self):
         """Test that read_csv successfully reads a CSV file and sets the data."""
@@ -49,9 +32,8 @@ class TestSensorIntegration(unittest.TestCase):
             "value": [10, 20, 30],
             "unit": ["C", "C", "C"],
         })
-        path = self._csv_path("ok.csv")
-        self._write_df(df, path)
-
+        path = self.write_csv(df, "ok.csv")
+        
         self.si.read_csv(path)
         data = self.si.get_sensor_data()
 
@@ -68,8 +50,7 @@ class TestSensorIntegration(unittest.TestCase):
             "value": [10],
             # "unit" column is missing
         })
-        path = self._csv_path("missing_columns.csv")
-        self._write_df(df, path)
+        path = self.write_csv(df, "missing_columns.csv")
         with self.assertRaises(ValueError):
             self.si.read_csv(path)
 
@@ -83,8 +64,7 @@ class TestSensorIntegration(unittest.TestCase):
             "unit": ["C"],
             "extra_column": ["unexpected"],  # Unexpected column should trigger ValueError
         })
-        path = self._csv_path("unexpected_columns.csv")
-        self._write_df(df, path)
+        path = self.write_csv(df, "unexpected_columns.csv")
         with self.assertRaises(ValueError):
             self.si.read_csv(path)
 
