@@ -3,11 +3,43 @@ import json
 import logging
 from pathlib import Path
 from typing import Any, Dict, List
+from abc import ABC, abstractmethod
 from Abstractions import Fault, Severity, Status
 
 # Configure logging for the module.
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
+class FaultRule(ABC):
+    """Abstract base class for a fault detection rule."""
+
+    def __init__(self, sensor_id: str, threshold: float, fault_code: str, severity: str, message: str):
+        self.sensor_id = sensor_id
+        self.threshold = threshold
+        self.fault_code = fault_code
+        self.severity = Severity[severity.capitalize()]
+        self.message = message
+
+    @abstractmethod
+    def is_triggered(self, value: float) -> bool:
+        """Evaluate whether the rule condition is met."""
+        pass
+
+class GreaterThanRule(FaultRule):
+    """Rule triggered when value exceeds the threshold."""
+    def is_triggered(self, value: float) -> bool:
+        return value > self.threshold
+
+
+class LessThanRule(FaultRule):
+    """Rule triggered when value falls below the threshold."""
+    def is_triggered(self, value: float) -> bool:
+        return value < self.threshold
+
+class EqualRule(FaultRule):
+    """Rule triggered when value equals the threshold."""
+    def is_triggered(self, value: float) -> bool:
+        return value == self.threshold
+    
 class FaultDetection():
     """Detects faults from sensor data using configurable fault rules sets."""
     def __init__(self) -> None:
@@ -16,16 +48,45 @@ class FaultDetection():
     
     def loadRules(self, file_path: str) -> None:
         """
-        Load fault detection rules from a JSON file.
+        Load fault detection rules from a JSON file and instantiate rule objects.
 
         Args:
             file_path(str): Path to the JSON file containing the fault detection rules. 
         """
         with open(Path(file_path), "r") as f:
-            rules = json.load(f)
-        for rule in rules:
-            rule["severity"] = Severity[rule["severity"].capitalize()]
-        self.detectionRules = rules
+            rules_data = json.load(f)
+
+        self.detectionRules = []
+        for rule in rules_data:
+            condition = rule["condition"]
+            if condition == ">":
+                rule_obj = GreaterThanRule(
+                    sensor_id=rule["sensor_id"],
+                    threshold=rule["threshold"],
+                    fault_code=rule["faultCode"],
+                    severity=rule["severity"],
+                    message=rule["message"]
+                )
+            elif condition == "<":
+                rule_obj = LessThanRule(
+                    sensor_id=rule["sensor_id"],
+                    threshold=rule["threshold"],
+                    fault_code=rule["faultCode"],
+                    severity=rule["severity"],
+                    message=rule["message"]
+                )
+            elif condition in ("=","=="):
+                rule_obj = EqualRule(
+                    sensor_id=rule["sensor_id"],
+                    threshold=rule["threshold"],
+                    fault_code=rule["faultCode"],
+                    severity=rule["severity"],
+                    message=rule["message"]                  
+                )
+            else: 
+                continue
+
+            self.detectionRules.append(rule_obj)
 
     def detectFaults(self, sensorData: Dict[str, Any]) -> List[Fault]:
         """
@@ -51,16 +112,16 @@ class FaultDetection():
 
         detected_faults: List[Fault] = []
         for rule in self.detectionRules:
-             if rule["sensor_id"] == sensorData.get("sensor_id"):
+             if rule.sensor_id == sensorData.get("sensor_id"):
                 value = sensorData.get("value")
-                if self._evaluate_rule(rule["condition"], value, rule["threshold"]):
+                if rule.is_triggered(value):
                     fault = Fault(
-                        fault_id=rule["faultCode"],
+                        fault_id=rule.fault_code,
                         sensor_id=sensorData["sensor_id"],
-                        severity=rule["severity"],
-                        description=rule["message"],
+                        severity=rule.severity,
+                        description=rule.message,
                         timestamp = sensorData["timestamp"],
-                        status=Status.ACTIVE,
+                        status=Status.ACTIVE
                     )
                     detected_faults.append(fault)
                     self.activeFaults.append(fault)
@@ -84,37 +145,6 @@ class FaultDetection():
             row_faults = self.detectFaults(row.to_dict())
             all_faults.extend(row_faults)
         return all_faults
-    
-    def _evaluate_rule(self, condition: str, value: float, threshold: float) -> bool:
-        """
-        Evaluate a single fault detection rule.
-
-        Args:
-            condition (str): The comparison operator (>, <, >=, <=, ==, etc.).
-            value (float): The sensor value.
-            threshold (float): The threshold for comparison.
-
-        Returns:
-            bool: True if the condition is met.
-        """
-        try:
-            if condition == ">": 
-                return value > threshold
-            if condition == "<": 
-                return value < threshold
-            if condition == ">=": 
-                return value >= threshold
-            if condition == "<=": 
-                return value <= threshold
-            if condition in ("==", "="): 
-                return value == threshold
-            return False
-        except TypeError as e:
-            logging.error(
-                f"Error evaluating rule: condition={condition}, value={value}, "
-                f"threshold={threshold} — {e}"
-            )
-            return False
 
     def getActiveFaults(self) -> List[Fault]:
         # Return a list of all currently active faults.
