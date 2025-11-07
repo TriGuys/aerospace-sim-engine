@@ -49,10 +49,10 @@ class EqualRule(FaultRule):
 class FaultDetection():
     """Detects faults from sensor data using configurable fault rules sets."""
     def __init__(self) -> None:
-        self.activeFaults: List[Fault] = []
-        self.detectionRules: List[Dict[str, Any]] = []
+        self.active_faults: List[Fault] = []
+        self.detection_rules: List[FaultRule] = []
     
-    def loadRules(self, file_path: str) -> None:
+    def load_rules(self, file_path: str) -> None:
         """
         Load fault detection rules from a JSON file and create rule objects.
 
@@ -62,14 +62,14 @@ class FaultDetection():
         with open(Path(file_path), "r") as f:
             rules_data = json.load(f)
 
-        self.detectionRules = []
+        self.detection_rules = []
         for rule in rules_data:
             condition = rule["condition"]
             if condition == ">":
                 rule_obj = GreaterThanRule(
                     sensor_id=rule["sensor_id"],
                     threshold=rule["threshold"],
-                    fault_code=rule["faultCode"],
+                    fault_code=rule["fault_code"],
                     severity=rule["severity"],
                     message=rule["message"]
                 )
@@ -77,7 +77,7 @@ class FaultDetection():
                 rule_obj = LessThanRule(
                     sensor_id=rule["sensor_id"],
                     threshold=rule["threshold"],
-                    fault_code=rule["faultCode"],
+                    fault_code=rule["fault_code"],
                     severity=rule["severity"],
                     message=rule["message"]
                 )
@@ -85,20 +85,20 @@ class FaultDetection():
                 rule_obj = EqualRule(
                     sensor_id=rule["sensor_id"],
                     threshold=rule["threshold"],
-                    fault_code=rule["faultCode"],
+                    fault_code=rule["fault_code"],
                     severity=rule["severity"],
                     message=rule["message"]                  
                 )
             else: 
                 continue
 
-            self.detectionRules.append(rule_obj)
+            self.detection_rules.append(rule_obj)
 
-    def detectFaults(self, sensorData: Dict[str, Any]) -> List[Fault]:
+    def detect_faults(self, sensor_data: Dict[str, Any]) -> List[Fault]:
         """
         Apply all loaded FaultRule objects to a single sensor record.
 
-        Each rule evaluates its own condition via its its_triggered() method, demonstrating polymorphism.
+        Each rule evaluates its own condition via its is_triggered() method, demonstrating polymorphism.
         When a rule's condition is satisfied, a corresponding Fault object is created and returned.
         
         Note:
@@ -106,7 +106,7 @@ class FaultDetection():
             which applies detection to an entire pandas DataFrame.
 
         Args:
-            sensorData (dict): 
+            sensor_data (dict): 
                 A dictionary representing one sensor data record, expected to include:
                 - "timestamp" (str): The time the reading was taken.
                 - "sensor_id" (str): The unique identifier of the sensor.
@@ -120,41 +120,41 @@ class FaultDetection():
         """
 
         detected_faults: List[Fault] = []
-        for rule in self.detectionRules:
-             if rule.sensor_id == sensorData.get("sensor_id"):
-                value = sensorData.get("value")
+        for rule in self.detection_rules:
+             if rule.sensor_id == sensor_data.get("sensor_id"):
+                value = sensor_data.get("value")
                 if rule.is_triggered(value):
                     fault = Fault(
                         fault_id=rule.fault_code,
-                        sensor_id=sensorData["sensor_id"],
+                        sensor_id=sensor_data["sensor_id"],
                         severity=rule.severity,
                         description=rule.message,
-                        timestamp = sensorData["timestamp"],
+                        timestamp = sensor_data["timestamp"],
                         status=Status.ACTIVE
                     )
                     detected_faults.append(fault)
-                    self.activeFaults.append(fault)
+                    self.active_faults.append(fault)
         return detected_faults
     
-    def detectFromBatch(self, dataFrame: pd.DataFrame) -> List[Fault]:
+    def detect_from_batch(self, data_frame: pd.DataFrame) -> List[Fault]:
         """
         Apply fault detection to all rows in a DataFrame.
 
         Args:
-            dataFrame (pd.DataFrame): Sensor data with the required columns.
+            data_frame (pd.DataFrame): Sensor data with the required columns.
 
         Returns:
             list[Fault]: A list of all detected faults.
         """
-        if not isinstance(dataFrame, pd.DataFrame):
+        if not isinstance(data_frame, pd.DataFrame):
             raise TypeError("Expected a pandas DataFrame for detectFromBatch()")
         
         all_faults: List[Fault] = []
-        for index, row in dataFrame.iterrows():
-            row_faults = self.detectFaults(row.to_dict())
+        for index, row in data_frame.iterrows():
+            row_faults = self.detect_faults(row.to_dict())
             all_faults.extend(row_faults)
         return all_faults
 
-    def getActiveFaults(self) -> List[Fault]:
+    def get_active_faults(self) -> List[Fault]:
         # Return a list of all currently active faults.
-        return self.activeFaults
+        return self.active_faults
