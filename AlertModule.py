@@ -1,7 +1,6 @@
 import logging
 from typing import List
 from Abstractions import AlertCreation, Alert, Status
-from Abstractions import AlertCreation, Alert
 from Database import AlertDatabase
 
 # Configure logging for module.
