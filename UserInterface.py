@@ -150,10 +150,6 @@ class UserInterface():
         except Exception as e:
             messagebox.showerror("Processing Error", f"An error occurred while processing the file:\n{e}")
 
-    def create_alert(self) -> None:
-        """Placeholder for alert creation logic."""
-        pass
-
     def create_alert_table(self, parent: tk.Widget) -> None:
         """Create the main table showing active alerts."""
         frame = tk.Frame(parent, bg="white")

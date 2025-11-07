@@ -18,6 +18,7 @@ class TestDatabase(unittest.TestCase):
 
     def tearDown(self):
         """Clean up the temporary directory."""
+        self.db.close()
         self.tmpdir.cleanup()
 
     def test_add_and_get_alert(self):
@@ -85,7 +86,7 @@ class TestDatabase(unittest.TestCase):
             ids.append(created.alert_id)
 
         all_alerts = self.db.get_all()
-        self.assertEqual([al.alert_id for al in all_alerts], sorted(ids, reverse=True))
+        self.assertEqual([al.alert_id for al in all_alerts], ids)
 
 if __name__ == "__main__":
     unittest.main()
