@@ -61,6 +61,8 @@ class AlertDatabase:
                 ),
             ).fetchone()
 
+            self._con.commit()
+
             # Convert the status string from the DB back to enum
             data = dict(row)
             data["status"] = Status(data["status"])
