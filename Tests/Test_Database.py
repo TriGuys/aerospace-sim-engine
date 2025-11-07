@@ -2,24 +2,23 @@ import sys, os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import unittest
-import tempfile
-from pathlib import Path
 
 from Database import AlertDatabase
 from Abstractions import AlertCreation
+from Test_Base import TestBase
 
-class TestDatabase(unittest.TestCase):
+class TestDatabase(TestBase):
 
     def setUp(self):
-        """Create a temporary directory for test files."""
-        self.tmpdir = tempfile.TemporaryDirectory()
-        self.db_path = Path(self.tmpdir.name) / "alerts.db"
+        super().setUp()
+        self.db_path = self.tmp_path / "alerts.db"
         self.db = AlertDatabase(str(self.db_path))
 
     def tearDown(self):
-        """Clean up the temporary directory."""
-        self.db.close()
-        self.tmpdir.cleanup()
+        try:
+            self.db.close()
+        finally:
+            super().tearDown()
 
     def test_add_and_get_alert(self):
         """Test adding an alert and retrieving it."""
