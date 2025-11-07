@@ -3,119 +3,158 @@ import json
 import logging
 from pathlib import Path
 from typing import Any, Dict, List
+from abc import ABC, abstractmethod
 from Abstractions import Fault, Severity, Status
 
 # Configure logging for the module.
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
+class FaultRule(ABC):
+    """Abstract base class for a fault detection rule.
+    
+    Defines a standard interface for evaluating sensor values against
+    fault thresholds. Subclasses then implement specific comparison logic
+    (e.g. GreaterThanRule, LessThanRule, EqualRule).
+    
+    """
+
+    def __init__(self, sensor_id: str, threshold: float, fault_code: str, severity: str, message: str):
+        self.sensor_id = sensor_id
+        self.threshold = threshold
+        self.fault_code = fault_code
+        self.severity = Severity[severity.capitalize()]
+        self.message = message
+
+    @abstractmethod
+    def is_triggered(self, value: float) -> bool:
+        """Evaluate whether the rule condition is met."""
+        pass
+
+class GreaterThanRule(FaultRule):
+    """Rule triggered when value exceeds the threshold."""
+    def is_triggered(self, value: float) -> bool:
+        return value > self.threshold
+
+
+class LessThanRule(FaultRule):
+    """Rule triggered when value falls below the threshold."""
+    def is_triggered(self, value: float) -> bool:
+        return value < self.threshold
+
+class EqualRule(FaultRule):
+    """Rule triggered when value equals the threshold."""
+    def is_triggered(self, value: float) -> bool:
+        return value == self.threshold
+    
 class FaultDetection():
     """Detects faults from sensor data using configurable fault rules sets."""
     def __init__(self) -> None:
-        self.activeFaults: List[Fault] = []
-        self.detectionRules: List[Dict[str, Any]] = []
+        self.active_faults: List[Fault] = []
+        self.detection_rules: List[FaultRule] = []
     
-    def loadRules(self, file_path: str) -> None:
+    def load_rules(self, file_path: str) -> None:
         """
-        Load fault detection rules from a JSON file.
+        Load fault detection rules from a JSON file and create rule objects.
 
-        Args:
-            file_path(str): Path to the JSON file containing the fault detection rules. 
+        Each JSON rule is converted into the appropriate FaultRule subclass based on its condition (>, <, =),
+        allowing each rule type to evaluate its logic independently through polymorphism.
         """
         with open(Path(file_path), "r") as f:
-            rules = json.load(f)
-        for rule in rules:
-            rule["severity"] = Severity[rule["severity"].capitalize()]
-        self.detectionRules = rules
+            rules_data = json.load(f)
 
-    def detectFaults(self, sensorData: Dict[str, Any]) -> List[Fault]:
+        self.detection_rules = []
+        for rule in rules_data:
+            condition = rule["condition"]
+            if condition == ">":
+                rule_obj = GreaterThanRule(
+                    sensor_id=rule["sensor_id"],
+                    threshold=rule["threshold"],
+                    fault_code=rule["fault_code"],
+                    severity=rule["severity"],
+                    message=rule["message"]
+                )
+            elif condition == "<":
+                rule_obj = LessThanRule(
+                    sensor_id=rule["sensor_id"],
+                    threshold=rule["threshold"],
+                    fault_code=rule["fault_code"],
+                    severity=rule["severity"],
+                    message=rule["message"]
+                )
+            elif condition in ("=","=="):
+                rule_obj = EqualRule(
+                    sensor_id=rule["sensor_id"],
+                    threshold=rule["threshold"],
+                    fault_code=rule["fault_code"],
+                    severity=rule["severity"],
+                    message=rule["message"]                  
+                )
+            else: 
+                continue
+
+            self.detection_rules.append(rule_obj)
+
+    def detect_faults(self, sensor_data: Dict[str, Any]) -> List[Fault]:
         """
-        Apply fault detection rules to a single sensor record.
+        Apply all loaded FaultRule objects to a single sensor record.
 
+        Each rule evaluates its own condition via its is_triggered() method, demonstrating polymorphism.
+        When a rule's condition is satisfied, a corresponding Fault object is created and returned.
+        
         Note:
             This method is called internally by detectFromBatch(), 
             which applies detection to an entire pandas DataFrame.
 
         Args:
-            sensorData (dict): 
+            sensor_data (dict): 
                 A dictionary representing one sensor data record, expected to include:
                 - "timestamp" (str): The time the reading was taken.
                 - "sensor_id" (str): The unique identifier of the sensor.
-                - "sensor_type" (str): The category or measurement type (e.g. Temperature, Pressure).
+                - "sensor_type" (str): The measurement type (e.g. Temperature, Pressure).
                 - "value" (float or int): The numeric reading from the sensor.
-                - "unit" (str): The unit of measurement for the sensor value (e.g., "°C", "psi", "V").
+                - "unit" (str): The unit of measurement (e.g., "°C", "psi", "V").
 
         Returns:
-            list[Fault]: List of detected fault objects for the sensor. 
-            Returns an empty list if none of the fault rules were triggered.
+            list[Fault]: A list of detected fault objects for the sensor. 
+            Returns an empty list if no rules are triggered.
         """
 
         detected_faults: List[Fault] = []
-        for rule in self.detectionRules:
-             if rule["sensor_id"] == sensorData.get("sensor_id"):
-                value = sensorData.get("value")
-                if self._evaluate_rule(rule["condition"], value, rule["threshold"]):
+        for rule in self.detection_rules:
+             if rule.sensor_id == sensor_data.get("sensor_id"):
+                value = sensor_data.get("value")
+                if rule.is_triggered(value):
                     fault = Fault(
-                        fault_id=rule["faultCode"],
-                        sensor_id=sensorData["sensor_id"],
-                        severity=rule["severity"],
-                        description=rule["message"],
-                        timestamp = sensorData["timestamp"],
-                        status=Status.ACTIVE,
+                        fault_id=rule.fault_code,
+                        sensor_id=sensor_data["sensor_id"],
+                        severity=rule.severity,
+                        description=rule.message,
+                        timestamp = sensor_data["timestamp"],
+                        status=Status.ACTIVE
                     )
                     detected_faults.append(fault)
-                    self.activeFaults.append(fault)
+                    self.active_faults.append(fault)
         return detected_faults
     
-    def detectFromBatch(self, dataFrame: pd.DataFrame) -> List[Fault]:
+    def detect_from_batch(self, data_frame: pd.DataFrame) -> List[Fault]:
         """
         Apply fault detection to all rows in a DataFrame.
 
         Args:
-            dataFrame (pd.DataFrame): Sensor data with the required columns.
+            data_frame (pd.DataFrame): Sensor data with the required columns.
 
         Returns:
             list[Fault]: A list of all detected faults.
         """
-        if not isinstance(dataFrame, pd.DataFrame):
+        if not isinstance(data_frame, pd.DataFrame):
             raise TypeError("Expected a pandas DataFrame for detectFromBatch()")
         
         all_faults: List[Fault] = []
-        for index, row in dataFrame.iterrows():
-            row_faults = self.detectFaults(row.to_dict())
+        for index, row in data_frame.iterrows():
+            row_faults = self.detect_faults(row.to_dict())
             all_faults.extend(row_faults)
         return all_faults
-    
-    def _evaluate_rule(self, condition: str, value: float, threshold: float) -> bool:
-        """
-        Evaluate a single fault detection rule.
 
-        Args:
-            condition (str): The comparison operator (>, <, >=, <=, ==, etc.).
-            value (float): The sensor value.
-            threshold (float): The threshold for comparison.
-
-        Returns:
-            bool: True if the condition is met.
-        """
-        try:
-            if condition == ">": 
-                return value > threshold
-            if condition == "<": 
-                return value < threshold
-            if condition == ">=": 
-                return value >= threshold
-            if condition == "<=": 
-                return value <= threshold
-            if condition in ("==", "="): 
-                return value == threshold
-            return False
-        except TypeError as e:
-            logging.error(
-                f"Error evaluating rule: condition={condition}, value={value}, "
-                f"threshold={threshold} — {e}"
-            )
-            return False
-
-    def getActiveFaults(self) -> List[Fault]:
+    def get_active_faults(self) -> List[Fault]:
         # Return a list of all currently active faults.
-        return self.activeFaults
+        return self.active_faults
