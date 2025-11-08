@@ -409,7 +409,7 @@ class UserInterface():
         ax.set_xlabel("Hour of day (24h)")
         ax.set_ylabel("Alert count")
 
-        ticks = list(range(0, 24, 3)) # set labels/ticks for every 3 hours over 24 hour period
+        ticks = list(range(0, 24, 1)) # set labels/ticks for every 3 hours over 24 hour period
         ax.set_xticks(ticks, [f"{h:02d}:00" for h in ticks]) # sets tick position
         for label in ax.get_xticklabels():
             label.set_fontsize(8)
