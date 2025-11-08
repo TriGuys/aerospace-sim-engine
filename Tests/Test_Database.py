@@ -21,11 +21,11 @@ class TestDatabase(TestBase):
             super().tearDown()
 
     def test_add_and_get_alert(self) -> None:
-        """Test adding an alert and retrieving it."""
+        """(FR2) Test adding an alert and retrieving it."""
         creation = AlertCreation(
-            sensor_id="sensor_1",
-            fault_code="F001",
-            severity="high",
+            sensor_id="ENG_OILTEMP",
+            fault_code="ENGINE_OVERHEAT",
+            severity="Critical",
             message="Test fault",
             timestamp="00:00:00",
         )
@@ -40,11 +40,11 @@ class TestDatabase(TestBase):
         self.assertEqual(retrieved.timestamp, creation.timestamp)
 
     def test_create_rejects_invalid_timestamp(self) -> None:
-        """Test that creating an alert with an invalid timestamp raises ValueError."""
+        """(FR2, NFR3) Test that creating an alert with an invalid timestamp raises ValueError."""
         bad_creation = AlertCreation(
             sensor_id="sensor_invalid",
             fault_code="F999",
-            severity="low",
+            severity="Advisory",
             message="Invalid timestamp test",
             timestamp="25:61:99",
         )
@@ -52,16 +52,16 @@ class TestDatabase(TestBase):
             self.database.create(bad_creation)
 
     def test_get_missing_returns_none(self) -> None:
-        """Test retrieving creation non-existent alert."""
+        """(FR2) Test retrieving creation non-existent alert."""
         missing_alert_id = 9999
         self.assertIsNone(self.database.get(missing_alert_id))
-        
+
     def test_delete_alert(self) -> None:
-        """Test deleting an alert."""
+        """(FR5) Test deleting an alert."""
         creation = AlertCreation(
-            sensor_id="sensor_1",
-            fault_code="F001",
-            severity="high",
+            sensor_id="ENG_OILTEMP",
+            fault_code="ENGINE_OVERHEAT",
+            severity="Critical",
             message="Test fault",
             timestamp="00:00:00",
         )
@@ -72,13 +72,13 @@ class TestDatabase(TestBase):
         self.assertFalse(self.database.delete(created.alert_id))  # Already deleted
 
     def test_get_all(self) -> None:
-        """Test retrieving all alerts."""
+        """(FR2) Test retrieving all alerts."""
         created_ids = []
         for i in range(3):
             creation = AlertCreation(
                 sensor_id=f"sensor_{i}",
                 fault_code=f"F00{i}",
-                severity="medium",
+                severity="Moderate",
                 message=f"Test fault {i}",
                 timestamp=f"00:00:0{i}",
             )
