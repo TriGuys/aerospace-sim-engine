@@ -396,6 +396,8 @@ class UserInterface():
 
         ticks = list(range(0, 24, 3)) # set labels/ticks for every 3 hours over 24 hour period
         ax.set_xticks(ticks, [f"{h:02d}:00" for h in ticks]) # sets tick position
+        for label in ax.get_xticklabels():
+            label.set_fontsize(8)
 
         ax.yaxis.get_major_locator().set_params(integer=True) # ensure its purely hour ticks no decimal
         self.graph_canvas.draw_idle()
