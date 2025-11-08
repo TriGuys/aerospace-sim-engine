@@ -18,7 +18,7 @@ class FaultRule(ABC):
     
     """
 
-    def __init__(self, sensor_id: str, threshold: float, fault_code: str, severity: str, message: str):
+    def __init__(self, sensor_id: str, threshold: float, fault_code: str, severity: str, message: str) -> None:
         self.sensor_id = sensor_id
         self.threshold = threshold
         self.fault_code = fault_code
