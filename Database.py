@@ -84,7 +84,7 @@ class AlertDatabase:
         
         return self._to_alert(row)
     
-    def get_all(self):
+    def get_all(self) -> list[Alert]:
         """Retrieve all alerts from the database."""
         rows = self._con.execute(
             """
@@ -107,6 +107,7 @@ class AlertDatabase:
                 "DELETE FROM alerts WHERE alert_id = ?",
                 (alert_id,)
             )
+            self._con.commit()
             return cur.rowcount > 0
         except sqlite3.OperationalError as e:
             raise RuntimeError(f"Delete failed: {e}")
@@ -118,6 +119,7 @@ class AlertDatabase:
                 "UPDATE alerts SET status = ? WHERE alert_id = ?",
                 (status.value, alert_id)
             )
+            self._con.commit()
             return cur.rowcount > 0
         except sqlite3.OperationalError as e:
             raise RuntimeError(f"Failed to update alert status: {e}")
