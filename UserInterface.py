@@ -1,10 +1,17 @@
 import os
 import tkinter as tk
 import logging
+import re
+
 from tkinter import ttk, filedialog, messagebox
 from PIL import Image, ImageTk
 from FaultDetection import FaultDetection
 from SensorIntegration import SensorIntegration
+
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+hour_minute_second = re.compile(r"^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$")
 
 class UserInterface():
     """Tkinter based user interface for the HeMoSys Aircraft Health Monitoring System."""
