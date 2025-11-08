@@ -37,19 +37,50 @@ class AlertDatabase:
 
     @staticmethod # doesn't require the class, just simply a utility function.
     def _validate_timestamp(ts: str) -> None:
+        """
+        Validate timestamp for HH:MM:SS format.
+
+        Args:
+            ts: timestamp to validate.
+
+        Raises:
+            ValueError: If timestamp isn't in valid 24-hour HH:MM:SS format.
+
+        """
         hour_minute_second = re.compile(r"^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$")
         if not hour_minute_second.match(ts):
             raise ValueError("timestamp must be valid 24-hour HH:MM:SS (00–23:59:59)")
         
     @staticmethod
     def _to_alert(row: sqlite3.Row) -> Alert:
-        """Convert the status string from the DB back to enum"""
+        """
+        Convert the status string from the DB back to enum
+
+        Args:
+            row: Row from the alert db.
+
+        Returns:
+            Alert: row intialised into an alert dataclass.
+        
+        """
         data = dict(row)
         data["status"] = Status(data["status"])
         return Alert(**data)
 
     def create(self, alert: AlertCreation) -> Alert:
-        """Insert a new alert into the database and return an Alert object."""
+        """
+        Insert a new alert into the database and return an Alert object.
+        
+        Args:
+            alert: alert creation dataclass instance.
+
+        Returns:
+            Alert: An initialised alert object.
+
+        Raises:
+            ValueError: If the alert creation object contains invalid data.
+        
+        """
         self._validate_timestamp(alert.timestamp)
         try:
             row = self._con.execute(
@@ -84,7 +115,7 @@ class AlertDatabase:
         
         return self._to_alert(row)
     
-    def get_all(self):
+    def get_all(self) -> list[Alert]:
         """Retrieve all alerts from the database."""
         rows = self._con.execute(
             """
@@ -101,23 +132,48 @@ class AlertDatabase:
         return alerts
 
     def delete(self, alert_id: int) -> bool:
-        """Delete an alert by ID."""
+        """
+        Delete an alert by ID.
+        
+        Args:
+            alert_id: id of alert to be deleted.
+
+        Returns:
+            bool: whether delete request was successful.
+
+        Raises:
+            RuntimeError: if delete failed.
+        """
         try:
             cur = self._con.execute(
                 "DELETE FROM alerts WHERE alert_id = ?",
                 (alert_id,)
             )
+            self._con.commit()
             return cur.rowcount > 0
         except sqlite3.OperationalError as e:
             raise RuntimeError(f"Delete failed: {e}")
         
     def update_status(self, alert_id: int, status: Status) -> bool:
-        """Update the status (Active/Resolved) of an alert."""
+        """
+        Update the status (Active/Resolved) of an alert.
+
+        Args:
+            alert_id: id of alert which status is to be changed on.
+            status: status in which alert should be changed too.
+        
+        Returns:
+            bool: whether conversion was successful.
+
+        Raises:
+            RuntimeError: if status has failed to be updated.
+        """
         try:
             cur = self._con.execute(
                 "UPDATE alerts SET status = ? WHERE alert_id = ?",
                 (status.value, alert_id)
             )
+            self._con.commit()
             return cur.rowcount > 0
         except sqlite3.OperationalError as e:
             raise RuntimeError(f"Failed to update alert status: {e}")
