@@ -351,6 +351,10 @@ class UserInterface():
             for a in self.all_alerts
         ]
 
+        if hasattr(self, "graph_ax"):
+            visible = [self.table.item(i, "values") for i in self.table.get_children("")]
+            self.sort_and_display_alerts(visible)
+
     def delete_alert(self, row_id: str) -> None:
         """Delete a selected alert after confirmation from the user."""
         values = self.table.item(row_id, "values")
