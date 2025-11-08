@@ -15,7 +15,7 @@ class AlertModule:
 
     def create_alert(self, sensor_id: str, fault_code: str, severity: str, message: str, timestamp: str) -> Alert:
         """
-        Creates a new alert and stores it in the database.
+        Create a new alert and store it in the database.
 
         Args:
             sensor_id: str
@@ -50,7 +50,15 @@ class AlertModule:
             raise
     
     def get_all_alerts(self) -> List[Alert]:
-        """Retrieve all alerts from the database."""
+        """
+        Retrieve all alerts from the database.
+
+        Args:
+            self: AlertModule instance.
+
+        Returns:
+            list[Alert]: A list of the alert records in the db.
+        """
         try:
             self.alerts = self.database.get_all()
             logging.info("Retrieved %d alerts from the database.", len(self.alerts))
@@ -60,7 +68,16 @@ class AlertModule:
             raise
     
     def resolve_alert(self, alert_id: int) -> bool:
-        """Mark an alert as resolved in the database."""
+        """
+        Mark an alert as resolved in the database.
+
+        Args:
+            alert_id: alert to resolve id.
+
+        Returns:
+            bool: whether alert resolution was successful.
+        
+        """
         try:
             updated = self.database.update_status(alert_id, Status.RESOLVED)
             if updated:
