@@ -252,6 +252,11 @@ class UserInterface():
             tag = "resolved" if status == "resolved" else severity
             self.table.insert("", tk.END, values=row, tags=(tag,))
 
+        if hasattr(self, "graph_ax"): # hasattr checks graph exists and avoids exception if it doesn't
+            # Use the rows just displayed (not necessarily all_alerts if filtered)
+            visible = [self.table.item(i, "values") for i in self.table.get_children("")]
+            self.create_alert_graph(visible)
+
     def show_all_alerts(self) -> None:
         """Display all alerts."""
         self.display_alerts(self.all_alerts)
