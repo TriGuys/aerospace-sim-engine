@@ -53,7 +53,7 @@ class SensorIntegration():
         
         extra = [col for col in df.columns if col not in self.REQUIRED_COLS]
         if extra:
-            logging.warning(f"Unexpected extra columns in sensor data: {', '.join(extra)}")
+            logging.error(f"Unexpected extra columns in sensor data: {', '.join(extra)}")
             raise ValueError(f"Unexpected extra columns in sensor data: {', '.join(extra)}")
 
     def _clean_data(self, df: pd.DataFrame) -> pd.DataFrame:
