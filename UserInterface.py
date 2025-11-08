@@ -30,7 +30,7 @@ class UserInterface():
         self.root.grid_columnconfigure(0, weight=1, minsize=200)
         self.root.grid_columnconfigure(1, weight=4)
         self.root.grid_rowconfigure(0, weight=3)
-        self.root.grid_rowconfigure(1, weight=1)
+        self.root.grid_rowconfigure(1, weight=1, minsize=260)
 
     def create_sidebar(self, parent: tk.Widget) -> tk.Frame:
         """Create the left sidebar with alert filter buttons."""
@@ -399,6 +399,8 @@ class UserInterface():
         ax.clear()
         ax.bar(range(24), counts) # establish 24 bars
 
+        ax.set_xlim(-0.5, 23.5)           # 00–23 fixed
+        ax.set_ylim(bottom=0)
         ax.set_title("Alerts per hour")
         ax.set_xlabel("Hour of day (24h)")
         ax.set_ylabel("Alert count")
