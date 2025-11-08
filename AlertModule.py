@@ -14,7 +14,19 @@ class AlertModule:
         logging.info("AlertModule initialised with %d existing alerts.", len(self.alerts))
 
     def create_alert(self, sensor_id: str, fault_code: str, severity: str, message: str, timestamp: str) -> Alert:
-        """Create a new alert and store it in the database."""
+        """
+        Creates a new alert and stores it in the database.
+
+        Args:
+            sensor_id: str
+            fault_code: str
+            severity: str
+            message: str
+            timestamp: str
+
+        Returns:
+            Alert: Alert created.
+        """
         try:
             alert_data = AlertCreation(
                 sensor_id=sensor_id,
