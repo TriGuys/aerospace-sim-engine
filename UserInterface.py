@@ -378,6 +378,14 @@ class UserInterface():
             self.all_alerts = [a for a in self.all_alerts if str(a[0]) != str(alert_id)]
             messagebox.showinfo("Alert Deleted", f"Alert {alert_id} deleted successfully.")
 
+    def sort_alerts(self, alerts: list[tuple]) -> None:
+        counts = [0] * 24 # Create bin for each hour of the day
+        
+        for row in alerts:
+            timestamp = str(row[5])
+            if hour_minute_second.match(timestamp): # verify timestamp is in HH:MM:SS format
+                counts[int(timestamp[0:2])] += 1 # add it to the correct HH bin
+
     def create_alert_graph(self, parent: tk.Widget) -> None:
         """Create a placeholder frame for the alert graph window."""
         frame = tk.Frame(parent, bg="#e9e9e9", height=200, bd=1, relief="solid")
