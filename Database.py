@@ -60,7 +60,7 @@ class AlertDatabase:
             row: Row from the alert db.
 
         Returns:
-            Alert: row instansiated into an alert dataclass.
+            Alert: row intialised into an alert dataclass.
         
         """
         data = dict(row)
@@ -68,7 +68,19 @@ class AlertDatabase:
         return Alert(**data)
 
     def create(self, alert: AlertCreation) -> Alert:
-        """Insert a new alert into the database and return an Alert object."""
+        """
+        Insert a new alert into the database and return an Alert object.
+        
+        Args:
+            alert: alert creation dataclass instance.
+
+        Returns:
+            Alert: An initialised alert object.
+
+        Raises:
+            ValueError: If the alert creation object contains invalid data.
+        
+        """
         self._validate_timestamp(alert.timestamp)
         try:
             row = self._con.execute(
@@ -120,7 +132,18 @@ class AlertDatabase:
         return alerts
 
     def delete(self, alert_id: int) -> bool:
-        """Delete an alert by ID."""
+        """
+        Delete an alert by ID.
+        
+        Args:
+            alert_id: id of alert to be deleted.
+
+        Returns:
+            bool: whether delete request was successful.
+
+        Raises:
+            RuntimeError: if delete failed.
+        """
         try:
             cur = self._con.execute(
                 "DELETE FROM alerts WHERE alert_id = ?",
@@ -132,7 +155,19 @@ class AlertDatabase:
             raise RuntimeError(f"Delete failed: {e}")
         
     def update_status(self, alert_id: int, status: Status) -> bool:
-        """Update the status (Active/Resolved) of an alert."""
+        """
+        Update the status (Active/Resolved) of an alert.
+
+        Args:
+            alert_id: id of alert which status is to be changed on.
+            status: status in which alert should be changed too.
+        
+        Returns:
+            bool: whether conversion was successful.
+
+        Raises:
+            RuntimeError: if status has failed to be updated.
+        """
         try:
             cur = self._con.execute(
                 "UPDATE alerts SET status = ? WHERE alert_id = ?",
