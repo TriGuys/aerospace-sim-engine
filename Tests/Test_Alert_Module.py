@@ -2,6 +2,7 @@ import sys, os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import unittest
+from unittest.mock import patch
 
 from Abstractions import AlertCreation, Alert
 from Database import AlertDatabase
@@ -22,15 +23,16 @@ class TestAlertModule(TestBase):
             super().tearDown()
 
     def test_initial_state_no_alerts(self) -> None:
-        """Test that the AlertModule starts with no alerts."""
+        """(FR2) Test that the AlertModule starts with no alerts."""
         self.assertEqual(self.alert_module.get_all_alerts(), [])
         self.assertEqual(self.alert_module.alerts, [])
 
     def test_create_alert(self) -> None:
+        """(FR2) Test creating and retrieving an alert."""
         created = self.alert_module.create_alert(
             sensor_id="sensor_1",
             fault_code="F001",
-            severity="high",
+            severity="Critical",
             message="Test fault",
             timestamp="12:00:00",
         )
@@ -46,22 +48,24 @@ class TestAlertModule(TestBase):
         self.assertEqual(refreshed[0].alert_id, self.alert_module.alerts[0].alert_id)
 
     def test_create_alert_invalid_timestamp(self) -> None:
-        """Test creating an alert with an invalid timestamp fails alert creation."""
-        with self.assertRaises(ValueError):
-            self.alert_module.create_alert(
-                sensor_id="sensor_invalid",
-                fault_code="F999",
-                severity="low",
-                message="Invalid timestamp test",
-                timestamp="2025-01-01",
-            )
+        """(FR2, NFR3) Test creating an alert with an invalid timestamp fails alert creation."""
+        with patch("AlertModule.logging") as mock_log:
+            with self.assertRaises(ValueError):
+                self.alert_module.create_alert(
+                    sensor_id="sensor_invalid",
+                    fault_code="F999",
+                    severity="Advisory",
+                    message="Invalid timestamp test",
+                    timestamp="2025-01-01",
+                )
+            self.assertTrue(mock_log.error.called)
 
     def test_get_alert(self) -> None:
-        """Test retrieving an alert by ID."""
+        """(FR2) Test retrieving an alert by ID."""
         created = self.database.create(AlertCreation(
             sensor_id="sensor_2",
             fault_code="F002",
-            severity="medium",
+            severity="Moderate",
             message="Another test fault",
             timestamp="00:00:01",
         ))
@@ -72,11 +76,11 @@ class TestAlertModule(TestBase):
         self.assertEqual(self.alert_module.alerts, alerts)
 
     def test_delete_alert(self) -> None:
-        """Test deleting an alert by ID."""
+        """(FR5) Test deleting an alert by ID."""
         created = self.alert_module.create_alert(
             sensor_id="sensor_3",
             fault_code="F003",
-            severity="low",
+            severity="Advisory",
             message="Delete test fault",
             timestamp="00:00:02",
         )
@@ -89,5 +93,28 @@ class TestAlertModule(TestBase):
         self.assertFalse(self.alert_module.delete_alert(created.alert_id))
 
     def test_delete_nonexistent_alert(self) -> None:
+        """(FR5) Test deleting a non-existent alert returns False."""
         missing_alert_id = 9999
         self.assertFalse(self.alert_module.delete_alert(missing_alert_id))
+
+    def test_resolve_and_unresolve(self) -> None:
+        """(FR4) Test resolving and unresolving an alert."""
+        created = self.alert_module.create_alert(
+            sensor_id="sensor_4",
+            fault_code="F004",
+            severity="Critical",
+            message="Resolve test fault",
+            timestamp="00:00:03",
+        )
+
+        # Resolve the alert
+        self.assertTrue(self.alert_module.resolve_alert(created.alert_id, True))
+        refreshed = self.alert_module.get_all_alerts()
+        resolved = next(a for a in refreshed if a.alert_id == created.alert_id)
+        self.assertEqual(getattr(resolved, "status", "Acvtive"), "Resolved")
+
+        # Unresolve the alert
+        self.assertTrue(self.alert_module.resolve_alert(created.alert_id, False))
+        second_refreshed = next(a for a in self.alert_module.alerts if a.alert_id == created.alert_id)
+        active = next(a for a in second_refreshed if a.alert_id == created.alert_id)
+        self.assertEqual(getattr(active, "status", "Active"), "Active")
