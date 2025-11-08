@@ -388,16 +388,17 @@ class UserInterface():
 
     def create_alert_graph(self, parent: tk.Widget) -> None:
         """Create a placeholder frame for the alert graph window."""
-        frame = tk.Frame(parent, bg="#e9e9e9", height=200, bd=1, relief="solid")
-        frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=(0, 10))
-        frame.grid_propagate(False)
+        self.graph_frame = tk.Frame(parent, bg="#e9e9e9", height=240, bd=1, relief="solid")
+        self.graph_frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=(0, 10))
+        self.graph_frame.grid_propagate(False)
 
-        tk.Label(
-            frame,
-            text="(Graph placeholder for alerts over time)",
-            bg="#e9e9e9",
-            font=("Arial", 10, "italic")
-        ).pack(pady=40)
+        # Figure + canvas (reserve bottom margin for tick labels)
+        self.graph_fig = Figure(figsize=(7.5, 2.4), dpi=100)
+        self.graph_ax = self.graph_fig.add_subplot(111)
+        self.graph_fig.subplots_adjust(bottom=0.28, left=0.08, right=0.98, top=0.88)
+
+        self.graph_canvas = FigureCanvasTkAgg(self.graph_fig, master=self.graph_frame)
+        self.graph_canvas.get_tk_widget().pack(fill="both", expand=True)
 
     def draw_window(self) -> None:
         """Render all of the user interface components."""
