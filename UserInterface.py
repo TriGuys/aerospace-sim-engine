@@ -1,10 +1,17 @@
 import os
 import tkinter as tk
 import logging
+import re
+
 from tkinter import ttk, filedialog, messagebox
 from PIL import Image, ImageTk
 from FaultDetection import FaultDetection
 from SensorIntegration import SensorIntegration
+
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+hour_minute_second = re.compile(r"^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$")
 
 class UserInterface():
     """Tkinter based user interface for the HeMoSys Aircraft Health Monitoring System."""
@@ -23,7 +30,7 @@ class UserInterface():
         self.root.grid_columnconfigure(0, weight=1, minsize=200)
         self.root.grid_columnconfigure(1, weight=4)
         self.root.grid_rowconfigure(0, weight=3)
-        self.root.grid_rowconfigure(1, weight=1)
+        self.root.grid_rowconfigure(1, weight=1, minsize=260)
 
     def create_sidebar(self, parent: tk.Widget) -> tk.Frame:
         """Create the left sidebar with alert filter buttons."""
@@ -114,9 +121,9 @@ class UserInterface():
 
             # Detect faults in the DataFrame.
             rules_path = os.path.join(os.path.dirname(__file__), "fault_rules.json")
-            self.fault_detection.loadRules(rules_path)
+            self.fault_detection.load_rules(rules_path)
 
-            faults = self.fault_detection.detectFromBatch(df)
+            faults = self.fault_detection.detect_from_batch(df)
 
             # Create alerts from each fault.
             for fault in faults:
@@ -245,6 +252,11 @@ class UserInterface():
             tag = "resolved" if status == "resolved" else severity
             self.table.insert("", tk.END, values=row, tags=(tag,))
 
+        if hasattr(self, "graph_ax"): # hasattr checks graph exists and avoids exception if it doesn't
+            # Use the rows just displayed (not necessarily all_alerts if filtered)
+            visible = [self.table.item(i, "values") for i in self.table.get_children("")]
+            self.sort_and_display_alerts(visible)
+
     def show_all_alerts(self) -> None:
         """Display all alerts."""
         self.display_alerts(self.all_alerts)
@@ -339,6 +351,10 @@ class UserInterface():
             for a in self.all_alerts
         ]
 
+        if hasattr(self, "graph_ax"):
+            visible = [self.table.item(i, "values") for i in self.table.get_children("")]
+            self.sort_and_display_alerts(visible)
+
     def delete_alert(self, row_id: str) -> None:
         """Delete a selected alert after confirmation from the user."""
         values = self.table.item(row_id, "values")
@@ -371,18 +387,52 @@ class UserInterface():
             self.all_alerts = [a for a in self.all_alerts if str(a[0]) != str(alert_id)]
             messagebox.showinfo("Alert Deleted", f"Alert {alert_id} deleted successfully.")
 
+        if hasattr(self, "graph_ax"):
+            visible = [self.table.item(i, "values") for i in self.table.get_children("")]
+            self.sort_and_display_alerts(visible)
+
+    def sort_and_display_alerts(self, alerts: list[tuple]) -> None:
+        counts = [0] * 24 # Create bin for each hour of the day
+        
+        for row in alerts:
+            timestamp = str(row[5])
+            if hour_minute_second.match(timestamp): # verify timestamp is in HH:MM:SS format
+                counts[int(timestamp[0:2])] += 1 # add it to the correct HH bin
+
+        ax = self.graph_ax 
+        ax.clear()
+        ax.bar(range(24), counts) # establish 24 bars
+
+        ax.set_xlim(-0.5, 23.5)           # 00–23 fixed
+        ax.set_ylim(bottom=0)
+        ax.set_title("Alerts per hour")
+        ax.set_xlabel("Hour of day (24h)")
+        ax.set_ylabel("Alert count")
+
+        ticks = list(range(0, 24, 1)) # set labels/ticks for every 3 hours over 24 hour period
+        ax.set_xticks(ticks, [f"{h:02d}:00" for h in ticks]) # sets tick position
+        for label in ax.get_xticklabels():
+            label.set_fontsize(8)
+
+        ax.yaxis.get_major_locator().set_params(integer=True) # ensure its purely hour ticks no decimal
+        self.graph_canvas.draw_idle()
+
     def create_alert_graph(self, parent: tk.Widget) -> None:
         """Create a placeholder frame for the alert graph window."""
-        frame = tk.Frame(parent, bg="#e9e9e9", height=200, bd=1, relief="solid")
-        frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=(0, 10))
-        frame.grid_propagate(False)
+        self.graph_frame = tk.Frame(parent, bg="#e9e9e9", height=240, bd=1, relief="solid")
+        self.graph_frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=(0, 10))
+        self.graph_frame.grid_propagate(False)
 
-        tk.Label(
-            frame,
-            text="(Graph placeholder for alerts over time)",
-            bg="#e9e9e9",
-            font=("Arial", 10, "italic")
-        ).pack(pady=40)
+        # Figure + canvas (reserve bottom margin for tick labels)
+        self.graph_fig = Figure(figsize=(7.5, 2.4), dpi=100)
+        self.graph_ax = self.graph_fig.add_subplot(111)
+        self.graph_fig.subplots_adjust(bottom=0.28, left=0.08, right=0.98, top=0.88)
+
+        self.graph_canvas = FigureCanvasTkAgg(self.graph_fig, master=self.graph_frame)
+        self.graph_canvas.get_tk_widget().pack(fill="both", expand=True)
+
+        # Draw
+        self.sort_and_display_alerts(getattr(self, "all_alerts", []))
 
     def draw_window(self) -> None:
         """Render all of the user interface components."""
