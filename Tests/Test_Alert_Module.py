@@ -89,4 +89,5 @@ class TestAlertModule(TestBase):
         self.assertFalse(self.alert_module.delete_alert(created.alert_id))
 
     def test_delete_nonexistent_alert(self) -> None:
-        self.assertFalse(self.alert_module.delete_alert(9999))  # Assuming 9999 does not exist
+        missing_alert_id = 9999
+        self.assertFalse(self.alert_module.delete_alert(missing_alert_id))

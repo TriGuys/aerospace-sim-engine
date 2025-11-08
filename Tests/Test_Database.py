@@ -53,8 +53,9 @@ class TestDatabase(TestBase):
 
     def test_get_missing_returns_none(self) -> None:
         """Test retrieving creation non-existent alert."""
-        self.assertIsNone(self.database.get(9999))  # Assuming 9999 does not exist
-
+        missing_alert_id = 9999
+        self.assertIsNone(self.database.get(missing_alert_id))
+        
     def test_delete_alert(self) -> None:
         """Test deleting an alert."""
         creation = AlertCreation(
@@ -70,8 +71,8 @@ class TestDatabase(TestBase):
         self.assertIsNone(self.database.get(created.alert_id))
         self.assertFalse(self.database.delete(created.alert_id))  # Already deleted
 
-    def test_get_all_descending(self) -> None:
-        """Test retrieving all alerts in descending order."""
+    def test_get_all(self) -> None:
+        """Test retrieving all alerts."""
         created_ids = []
         for i in range(3):
             creation = AlertCreation(
