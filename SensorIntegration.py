@@ -73,6 +73,13 @@ class SensorIntegration():
             df["value"] = pd.to_numeric(df["value"], errors='coerce')
             df = df.dropna(subset=["value"])
 
+            import re
+            hms = re.compile(r"^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$")
+            bad_timestamps = ~df["timestamp"].astype(str).str.match(hms)
+            if bad_timestamps.any():
+                logging.error("Invalid timestamp format detected: Expected HH:MM:SS.")
+                raise ValueError("Invalid timestamp format detected: Expected HH:MM:SS.")
+
             return df
         
         except Exception as e:
