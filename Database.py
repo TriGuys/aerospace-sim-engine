@@ -38,7 +38,7 @@ class AlertDatabase:
     @staticmethod # doesn't require the class, just simply a utility function.
     def _validate_timestamp(ts: str) -> None:
         """
-        Validates timestamp for HH:MM:SS format.
+        Validate timestamp for HH:MM:SS format.
 
         Args:
             ts: timestamp to validate.
@@ -53,7 +53,16 @@ class AlertDatabase:
         
     @staticmethod
     def _to_alert(row: sqlite3.Row) -> Alert:
-        """Convert the status string from the DB back to enum"""
+        """
+        Convert the status string from the DB back to enum
+
+        Args:
+            row: Row from the alert db.
+
+        Returns:
+            Alert: row instansiated into an alert dataclass.
+        
+        """
         data = dict(row)
         data["status"] = Status(data["status"])
         return Alert(**data)
