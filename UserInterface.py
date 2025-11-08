@@ -378,7 +378,7 @@ class UserInterface():
             self.all_alerts = [a for a in self.all_alerts if str(a[0]) != str(alert_id)]
             messagebox.showinfo("Alert Deleted", f"Alert {alert_id} deleted successfully.")
 
-    def sort_alerts(self, alerts: list[tuple]) -> None:
+    def sort_and_display_alerts(self, alerts: list[tuple]) -> None:
         counts = [0] * 24 # Create bin for each hour of the day
         
         for row in alerts:
@@ -412,6 +412,9 @@ class UserInterface():
 
         self.graph_canvas = FigureCanvasTkAgg(self.graph_fig, master=self.graph_frame)
         self.graph_canvas.get_tk_widget().pack(fill="both", expand=True)
+
+        # Draw
+        self.sort_and_display_alerts(getattr(self, "all_alerts", []))
 
     def draw_window(self) -> None:
         """Render all of the user interface components."""
