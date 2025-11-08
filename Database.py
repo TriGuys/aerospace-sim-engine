@@ -37,6 +37,16 @@ class AlertDatabase:
 
     @staticmethod # doesn't require the class, just simply a utility function.
     def _validate_timestamp(ts: str) -> None:
+        """
+        Validates timestamp for HH:MM:SS format.
+
+        Args:
+            ts: timestamp to validate.
+
+        Raises:
+            ValueError: If timestamp isn't in valid 24-hour HH:MM:SS format.
+
+        """
         hour_minute_second = re.compile(r"^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$")
         if not hour_minute_second.match(ts):
             raise ValueError("timestamp must be valid 24-hour HH:MM:SS (00–23:59:59)")

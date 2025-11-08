@@ -4,9 +4,7 @@ from AlertModule import AlertModule
 from Database import AlertDatabase
 
 def main():
-    """
-    Main orcherstrator method intialising database, alert module, UI and tkinter main loop.
-    """
+    """Main orcherstrator method intialising database, alert module, UI and tkinter main loop."""
     root = tk.Tk()
 
     # Initialise the backend.
