@@ -3,6 +3,8 @@ from pathlib import Path
 import logging
 import os
 
+from Database import AlertDatabase
+
 class SensorIntegration():
 
     REQUIRED_COLS = ["timestamp", "sensor_id", "sensor_type", "value", "unit"]
@@ -73,9 +75,16 @@ class SensorIntegration():
             df["value"] = pd.to_numeric(df["value"], errors='coerce')
             df = df.dropna(subset=["value"])
 
-            import re
-            hms = re.compile(r"^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$")
-            bad_timestamps = ~df["timestamp"].astype(str).str.match(hms)
+            # Reuse AlertDatabase's timestamp validation
+            def _verify(ts: str) -> bool:
+                try:
+                    AlertDatabase._validate_timestamp(str(ts))
+                    return True
+                except ValueError:
+                    return False
+                
+            bad_timestamps = ~df["timestamp"].astype(str).map(_verify)
+
             if bad_timestamps.any():
                 logging.error("Invalid timestamp format detected: Expected HH:MM:SS.")
                 raise ValueError("Invalid timestamp format detected: Expected HH:MM:SS.")
