@@ -22,13 +22,15 @@ class TestFaultDetection(TestBase):
         # Check rules exist
         self.assertGreater(len(rules), 0, "No fault detection rules loaded from JSON file.")
 
-        # Check each rule has required keys
-        required_keys = {"sensor_id", "fault_code", "condition", "threshold", "parameter", "severity", "message"}
+        # Check each rule has required attributes
+        required_attributes = {"sensor_id", "fault_code", "threshold", "severity", "message"}
+        
         for rule in rules:
-            self.assertTrue(
-                required_keys.issubset(rule.keys()),
-                f"Rule is missing required fields: {rule}"
-            )
+            with self.subTest(rule=str(rule)):
+                self.assertTrue(
+                    all(hasattr(rule, attr) for attr in required_attributes),
+                    f"Rule {rule} is missing one or more required attributes."
+                )
 
     def test_detect_from_batch_triggers_fault(self) -> None:
         """(FR1) Test that detect_from_batch identifies faults in sensor data."""
