@@ -114,7 +114,19 @@ class AlertModule:
             raise
 
     def delete_alert(self, alert_id: int) -> bool:
-        """Delete an alert from the database."""
+        """
+        Delete an alert from the database.
+
+        Args:
+            alert_id: id of alert to delete.
+
+        Returns:
+            bool: whether the deletion was successful or not.
+        
+        Raises:
+            ValueError: if invalid alert id is provided
+        
+        """
         try:
             alert_id = int(alert_id)
             deleted: bool = self.database.delete(alert_id)
