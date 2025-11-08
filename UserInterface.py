@@ -386,6 +386,19 @@ class UserInterface():
             if hour_minute_second.match(timestamp): # verify timestamp is in HH:MM:SS format
                 counts[int(timestamp[0:2])] += 1 # add it to the correct HH bin
 
+        ax = self.graph_ax 
+        ax.clear()
+        ax.bar(range(24), counts) # establish 24 bars
+
+        ax.set_title("Alerts per hour")
+        ax.set_xlabel("Hour of day (24h)")
+        ax.set_ylabel("Alert count")
+
+        ticks = list(range(0, 24, 3)) # set labels/ticks for every 3 hours over 24 hour period
+        ax.set_xticks(ticks, [f"{h:02d}:00" for h in ticks]) # sets tick position
+
+        self.graph_canvas.draw_idle()
+
     def create_alert_graph(self, parent: tk.Widget) -> None:
         """Create a placeholder frame for the alert graph window."""
         self.graph_frame = tk.Frame(parent, bg="#e9e9e9", height=240, bd=1, relief="solid")
