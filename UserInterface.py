@@ -121,9 +121,9 @@ class UserInterface():
 
             # Detect faults in the DataFrame.
             rules_path = os.path.join(os.path.dirname(__file__), "fault_rules.json")
-            self.fault_detection.loadRules(rules_path)
+            self.fault_detection.load_rules(rules_path)
 
-            faults = self.fault_detection.detectFromBatch(df)
+            faults = self.fault_detection.detect_from_batch(df)
 
             # Create alerts from each fault.
             for fault in faults:
