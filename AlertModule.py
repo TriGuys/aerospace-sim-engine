@@ -91,7 +91,16 @@ class AlertModule:
             raise
 
     def unresolve_alert(self, alert_id: int) -> bool:
-        """Mark a resolved alert as active again in the database."""
+        """
+        Mark a resolved alert as active again in the database.
+
+        Args:
+            alert_id: id of alert to unresolve.
+
+        Returns:
+            bool: whether the alert has been successfully unresovled.
+        
+        """
         try:
             updated = self.database.update_status(alert_id, Status.ACTIVE)
             if updated:
