@@ -42,3 +42,24 @@ class TestUserInterface(TestBase):
             self.root.destroy()
         except Exception:
             pass
+
+    def test_display_alerts_populates_table(self) -> None:
+        """(FR4) Test that display_alerts populates the GUI alert table."""
+        self.ui.display_alerts(self.ui.all_alerts)
+        # Verify insert called once per alert
+        self.assertEqual(self.ui.table.insert.call_count, len(self.ui.all_alerts))
+
+    def test_show_critical_alerts_filters_correctly(self) -> None:
+        """(FR7, FR4) Test that show_critical_alerts only displays critical alerts."""
+        with patch.object(self.ui, "display_alerts") as mock_display:
+            self.ui.show_critical_alerts()
+            mock_display.assert_called_once()
+            filtered = mock_display.call_args[0][0]
+            self.assertTrue(all(a[3].lower() == "critical" for a in filtered))
+
+    def test_show_moderate_alerts_filters_correctly(self) -> None:
+        """(FR7, FR4) Test moderate alert filtering works."""
+        with patch.object(self.ui, "display_alerts") as mock_display:
+            self.ui.show_moderate_alerts()
+            filtered = mock_display.call_args[0][0]
+            self.assertTrue(all(a[3].lower() == "moderate" for a in filtered))
