@@ -146,3 +146,10 @@ class TestUserInterface(TestBase):
             self.assertEqual(u[1], d.sensor_id)
             self.assertEqual(u[3].lower(), d.severity.lower())
             self.assertEqual(u[6].lower(), d.status.name.lower())
+
+    def test_module_is_independently_instantiable(self) -> None:
+        """(NFR4) Verify UserInterface can be instantiated independently."""
+        self.assertIsInstance(self.ui, UserInterface)
+
+if __name__ == "__main__":
+    unittest.main()
