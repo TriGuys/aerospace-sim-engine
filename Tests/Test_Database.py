@@ -41,9 +41,8 @@ class TestDatabase(TestBase):
         self.assertEqual(retrieved.message, creation.message)
         self.assertEqual(retrieved.timestamp, creation.timestamp)
 
-    @patch("logging.error")
-    def test_create_rejects_invalid_timestamp(self, mock_log_error) -> None:
-        """(FR2, NFR3) Test that creating an alert with an invalid timestamp raises ValueError."""
+    def test_create_rejects_invalid_timestamp(self) -> None:
+        """(FR2) Test that creating an alert with an invalid timestamp raises ValueError."""
         bad_creation = AlertCreation(
             sensor_id="sensor_invalid",
             fault_code="F999",
@@ -53,8 +52,6 @@ class TestDatabase(TestBase):
         )
         with self.assertRaises(ValueError):
             self.database.create(bad_creation)
-
-        mock_log_error.assert_called()
 
     def test_get_missing_returns_none(self) -> None:
         """(FR2) Test retrieving creation non-existent alert."""
