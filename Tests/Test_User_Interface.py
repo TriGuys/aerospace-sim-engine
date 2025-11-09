@@ -71,7 +71,7 @@ class TestUserInterface(TestBase):
         alert = self.alert_module.create_alert("A1", "TEST", "Critical", "Test fault", "12:00:00")
         row_id = str(alert.alert_id)
 
-        # Mock table.item() to return values tuple
+        # Mock table.item() to return values tuple.
         self.ui.table.item.side_effect = lambda *args, **kwargs: (
             alert.alert_id, "A1", "TEST", "Critical", "Test fault", "12:00:00"
         )
@@ -80,9 +80,31 @@ class TestUserInterface(TestBase):
             self.ui.delete_alert(row_id)
             mock_delete.assert_called_once_with(row_id)
 
-        # Verify messagebox.showinfo() was called once
+        # Verify messagebox.showinfo() was called once.
         mock_info.assert_called_once_with("Alert Deleted", f"Alert {alert.alert_id} deleted successfully.")
 
-        # Verify alert was deleted from database
+        # Verify alert was deleted from database.
         alerts = self.alert_module.get_all_alerts()
         self.assertFalse(any(a.alert_id == alert.alert_id for a in alerts))
+
+    @patch("UserInterface.messagebox.showinfo")
+    def test_resolve_alert_changes_status(self, mock_msg) -> None:
+        """(FR6, NFR1) Test that resolve_alert marks alert as resolved in DB."""
+        # Create alert in database.
+        alert = self.alert_module.create_alert("A1", "TEST", "Critical", "Test fault", "12:00:00")
+        row_id = str(alert.alert_id)
+
+        # Mock Treeview.item() to return the alert row.
+        self.ui.table.item.side_effect = lambda *args, **kwargs: [
+            alert.alert_id, "A1", "TEST", "Critical", "Test fault", "12:00:00", "Active", "✅ ❌"
+        ]
+
+        # Run the method.
+        self.ui.resolve_alert(row_id)
+
+        # Verify alert database has updated status.
+        updated = self.alert_module.get_all_alerts()[0]
+        self.assertEqual(updated.status.name, "RESOLVED")
+
+        # Verify feedback message shown.
+        mock_msg.assert_called_once_with("Alert Resolved", f"Alert {alert.alert_id} marked as resolved.")
