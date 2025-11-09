@@ -64,10 +64,10 @@ class TestUserInterface(TestBase):
             filtered = mock_display.call_args[0][0]
             self.assertTrue(all(a[3].lower() == "moderate" for a in filtered))
 
+    @patch("tkinter.messagebox.showinfo")
     @patch("tkinter.messagebox.askyesno", return_value=True)
-    def test_delete_alert_removes_from_table_and_db(self, mock_confirm) -> None:
+    def test_delete_alert_removes_from_table_and_db(self, mock_confirm, mock_info) -> None:
         """(FR5, NFR1) Test deleting an alert removes it from GUI and DB."""
-        # Insert alert into DB
         alert = self.alert_module.create_alert("A1", "TEST", "Critical", "Test fault", "12:00:00")
         row_id = str(alert.alert_id)
 
@@ -79,6 +79,9 @@ class TestUserInterface(TestBase):
         with patch.object(self.ui.table, "delete") as mock_delete:
             self.ui.delete_alert(row_id)
             mock_delete.assert_called_once_with(row_id)
+
+        # Verify messagebox.showinfo() was called once
+        mock_info.assert_called_once_with("Alert Deleted", f"Alert {alert.alert_id} deleted successfully.")
 
         # Verify alert was deleted from database
         alerts = self.alert_module.get_all_alerts()
