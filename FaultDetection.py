@@ -18,7 +18,7 @@ class FaultRule(ABC):
     
     """
 
-    def __init__(self, sensor_id: str, threshold: float, fault_code: str, severity: str, message: str):
+    def __init__(self, sensor_id: str, threshold: float, fault_code: str, severity: str, message: str) -> None:
         self.sensor_id = sensor_id
         self.threshold = threshold
         self.fault_code = fault_code
@@ -58,6 +58,10 @@ class FaultDetection():
 
         Each JSON rule is converted into the appropriate FaultRule subclass based on its condition (>, <, =),
         allowing each rule type to evaluate its logic independently through polymorphism.
+
+        Args:
+            file_path: location of JSON rules.
+
         """
         with open(Path(file_path), "r") as f:
             rules_data = json.load(f)
@@ -102,7 +106,7 @@ class FaultDetection():
         When a rule's condition is satisfied, a corresponding Fault object is created and returned.
         
         Note:
-            This method is called internally by detectFromBatch(), 
+            This method is called internally by detect_from_batch(), 
             which applies detection to an entire pandas DataFrame.
 
         Args:
@@ -141,13 +145,17 @@ class FaultDetection():
         Apply fault detection to all rows in a DataFrame.
 
         Args:
-            data_frame (pd.DataFrame): Sensor data with the required columns.
+            data_frame: Sensor data with the required columns.
 
         Returns:
             list[Fault]: A list of all detected faults.
+
+        Raises:
+            TypeError: If format other than a dataframe is supplied.
+
         """
         if not isinstance(data_frame, pd.DataFrame):
-            raise TypeError("Expected a pandas DataFrame for detectFromBatch()")
+            raise TypeError("Expected a pandas DataFrame for detect_from_batch()")
         
         all_faults: List[Fault] = []
         for index, row in data_frame.iterrows():

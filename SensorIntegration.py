@@ -42,7 +42,18 @@ class SensorIntegration():
         return df
     
     def _validate_data(self, df: pd.DataFrame) -> None:
-        """Ensure the DataFrame contains all required columns."""
+        """
+        Ensure the DataFrame contains all required columns.
+
+        Args:
+            df: dataframe to validate.
+
+        Raises:
+            ValueError: If required columns are missing.
+            ValueError: If duplicate columns are found.
+            ValueError: If extra columns exist.
+        
+        """
         missing: list[str] = [col for col in self.REQUIRED_COLS if col not in df.columns]
         if missing:
             logging.error(f"Missing required columns in sensor data: {', '.join(missing)}")
@@ -59,7 +70,20 @@ class SensorIntegration():
             raise ValueError(f"Unexpected extra columns in sensor data: {', '.join(extra)}")
 
     def _clean_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Clean and preprocess the sensor data."""
+        """
+        Clean and preprocess the sensor data.
+
+        Args:
+            df: dataframe of data to clean.
+
+        Returns:
+            df: dataframe of cleaned data.
+
+        Raises:
+            ValueError: If timestamp format is invalid (HH:MM:SS)
+            ValueError: If error occurs during data cleaning.
+        
+        """
         try:
             for col in ["sensor_id", "sensor_type", "unit"]:
               if col in df.columns:
