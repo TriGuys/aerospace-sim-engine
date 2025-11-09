@@ -131,3 +131,18 @@ class TestUserInterface(TestBase):
 
         # Verify that the GUI message was shown correctly.
         mock_msg.assert_called_once_with("Alert Reactivated", f"Alert {alert.alert_id} reactivated.")
+
+    def test_ui_and_database_consistency(self) -> None:
+        """(NFR1) Test GUI alert table matches database alerts after modifications."""
+        alert = self.alert_module.create_alert("A2", "ENGTEMP", "Moderate", "Engine temp", "14:00:00")
+        db_alerts = self.alert_module.get_all_alerts()
+
+        # Simulate GUI loading the same records.
+        ui_alerts = [(a.alert_id, a.sensor_id, a.fault_code, a.severity, a.message, a.timestamp, a.status.name, "") for a in db_alerts]
+
+        self.assertEqual(len(ui_alerts), len(db_alerts))
+        for u, d in zip(ui_alerts, db_alerts):
+            self.assertEqual(u[0], d.alert_id)
+            self.assertEqual(u[1], d.sensor_id)
+            self.assertEqual(u[3].lower(), d.severity.lower())
+            self.assertEqual(u[6].lower(), d.status.name.lower())
