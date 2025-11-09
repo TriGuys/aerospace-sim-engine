@@ -115,6 +115,27 @@ class TestSensorIntegration(TestBase):
         self.assertEqual(len(cleaned_data), 1)
         self.assertEqual(cleaned_data.iloc[0]["sensor_id"], "A1")
 
+    def test_read_csv_performance(self):
+        """(FR8, NFR5) Ensure CSV reading and cleaning completes within 5 seconds."""
+        import time
+        # Create sample dataset large enough to be confirm response times.
+        rows = 10000
+        data = pd.DataFrame({
+            "timestamp": ["00:00:00"] * rows,
+            "sensor_id": [f"A{i}" for i in range(rows)],
+            "sensor_type": ["temp"] * rows,
+            "value": [i % 100 for i in range(rows)],
+            "unit": ["C"] * rows,
+        })
+        csv_path = self.write_csv(data, "perf_test.csv")
+
+        start_time = time.time()
+        df = self.sensor_integration.read_csv(csv_path)
+        elapsed = time.time() - start_time
+
+        self.assertLess(elapsed, 5, f"CSV load took {elapsed:.2f}s, exceeding 5s limit.")
+        self.assertEqual(len(df), rows)
+
     def test_module_is_independently_instantiable(self) -> None:
         """(NFR4) Test that SensorIntegration can be instantiated independently."""
         self.assertIsInstance(self.sensor_integration, SensorIntegration)
