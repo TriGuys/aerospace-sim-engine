@@ -108,3 +108,26 @@ class TestUserInterface(TestBase):
 
         # Verify feedback message shown.
         mock_msg.assert_called_once_with("Alert Resolved", f"Alert {alert.alert_id} marked as resolved.")
+
+    @patch("UserInterface.messagebox.showinfo")
+    def test_unresolve_alert_changes_status(self, mock_msg) -> None:
+        """(FR6, NFR1) Test that resolve_alert toggles a resolved alert back to active."""
+        # Create and resolve alert first.
+        alert = self.alert_module.create_alert("A1", "TEST", "Critical", "Test fault", "12:00:00")
+        self.alert_module.resolve_alert(alert.alert_id)
+        row_id = str(alert.alert_id)
+
+        # Mock Treeview.item() to return a resolved alert row.
+        self.ui.table.item.side_effect = lambda *args, **kwargs: [
+            alert.alert_id, "A1", "TEST", "Critical", "Test fault", "12:00:00", "Resolved", "☑ ❌"
+        ]
+
+        # Call resolve_alert again (alert should unresolve/change to active).
+        self.ui.resolve_alert(row_id)
+
+        # Verify database status reverted to ACTIVE.
+        updated = self.alert_module.get_all_alerts()[0]
+        self.assertEqual(updated.status.name, "ACTIVE")
+
+        # Verify that the GUI message was shown correctly.
+        mock_msg.assert_called_once_with("Alert Reactivated", f"Alert {alert.alert_id} reactivated.")
