@@ -118,6 +118,7 @@ class AlertDatabase:
                 "UPDATE alerts SET status = ? WHERE alert_id = ?",
                 (status.value, alert_id)
             )
+            self._con.commit()
             return cur.rowcount > 0
         except sqlite3.OperationalError as e:
             raise RuntimeError(f"Failed to update alert status: {e}")

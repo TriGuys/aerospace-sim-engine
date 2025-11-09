@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import unittest
 from unittest.mock import patch
 
-from Abstractions import AlertCreation, Alert
+from Abstractions import AlertCreation, Alert, Status
 from Database import AlertDatabase
 from AlertModule import AlertModule
 from Test_Base import TestBase
@@ -107,14 +107,16 @@ class TestAlertModule(TestBase):
             timestamp="00:00:03",
         )
 
-        # Resolve the alert
-        self.assertTrue(self.alert_module.resolve_alert(created.alert_id, True))
-        refreshed = self.alert_module.get_all_alerts()
-        resolved = next(a for a in refreshed if a.alert_id == created.alert_id)
-        self.assertEqual(getattr(resolved, "status", "Acvtive"), "Resolved")
+        # Resolve via module and verify in DB
+        self.assertTrue(self.alert_module.resolve_alert(created.alert_id))
+        db_after_resolve = self.database.get(created.alert_id)
+        self.assertIsNotNone(db_after_resolve)
+        assert db_after_resolve is not None
+        self.assertEqual(db_after_resolve.status, Status.RESOLVED)
 
-        # Unresolve the alert
-        self.assertTrue(self.alert_module.resolve_alert(created.alert_id, False))
-        second_refreshed = next(a for a in self.alert_module.alerts if a.alert_id == created.alert_id)
-        active = next(a for a in second_refreshed if a.alert_id == created.alert_id)
-        self.assertEqual(getattr(active, "status", "Active"), "Active")
+        # Unresolve via module and verify in DB
+        self.assertTrue(self.alert_module.unresolve_alert(created.alert_id))
+        db_after_unresolve = self.database.get(created.alert_id)
+        self.assertIsNotNone(db_after_unresolve)
+        assert db_after_unresolve is not None
+        self.assertEqual(db_after_unresolve.status, Status.ACTIVE)
